@@ -34,22 +34,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to GitHub Pages (main only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          keep_files: true # preserve pr-preview/ directories between releases
-          enable_jekyll: false
-
-  preview:
-    name: PR preview
-    if: github.event_name == 'pull_request'
+  deploy:
+    name: Deploy to GitHub Pages (main only)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: gates
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write # pushes the gh-pages branch
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +55,35 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish preview to /pr-<n>/
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          keep_files: true # preserve pr-preview/ directories between releases
+          enable_jekyll: false
+
+  preview:
+    name: PR preview
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # pushes preview commits to gh-pages
+      pull-requests: write # comments the preview URL on the PR
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish preview to /pr-preview/pr-<n>/
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./dist

@@ -6,4 +6,7 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   site: 'https://moliver28.github.io',
   base: '/site-scratch-journalism/',
+  // Evidence files, Sveltia admin, and uploads live in static/ (journalism
+  // convention) — point Astro's public dir at it or nothing gets deployed.
+  publicDir: 'static',
 });

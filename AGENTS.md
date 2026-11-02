@@ -35,15 +35,53 @@ Layering: global `~/.zcode/AGENTS.md` → sitefactory factory `AGENTS.md` → th
   routes at `/custom-entities/`. Promote to a first-class type via a template
   release PR when a kind stabilizes.
 
+## Content schema (read before writing)
+
+`src/content.config.ts` is the schema source of truth. Read it — including
+every `.catchall` rule — before writing any entity, edge, or page:
+
+- Known fields are typed and Zod-validated: wrong types or missing required
+  fields fail the build (`npm run build` runs validation first).
+- Unknown fields on `entities`, `edges`, and `custom-entities` pass through
+  `.catchall(z.unknown())` and are rendered by the theme's generic fallback
+  renderers. Adding new data fields — or fields on a new entity/edge kind —
+  requires **zero component code changes**: add the field to the YAML and it
+  appears on the site.
+- The `pages` schema is typed (`title`, `description`, `order`). Unlike the
+  YAML collections it carries no catchall unless this repo's schema adds one
+  (some migrated sites do, so legacy frontmatter survives validation instead
+  of being stripped). Trust the schema file in this repo over this summary.
+
+Content-only PRs must never modify `src/content.config.ts`, `src/pages/**`,
+`vendor/theme/**`, `.github/**`, or `package.json` — schema, routes, theme,
+and CI change only through code PRs, which always require human review.
+
 ## Publishing contract (agents)
 
-- Branches: `(agent|human)/(feat|fix|docs)/<kebab-slug>`; PRs only; `main`
-  is protected.
-- Content-only PRs (entities/edges/pages YAML+MD, evidence files) may
-  auto-merge when gates are green. Schema, theme, workflow, or config changes
+- Branches: `agent/(feat|fix|chore|docs)/<kebab-slug>` (e.g.
+  `agent/feat/river-timeline`); PRs only; `main` is protected. Humans
+  follow the same pattern with a `human/` prefix.
+- Commits: Conventional Commits — `content:` prefix for content changes
+  (e.g. `content: add river case edges`); `feat:`, `fix:`, `docs:`,
+  `chore:` for code and docs.
+- A content-only PR contains exactly: `src/content/**`, `static/evidence/**`,
+  URL stubs under `static/` (meta-refresh redirects preserving legacy URLs),
+  and `README.md`. Nothing else.
+- Never in a content-only PR: code, config (`site.config.yaml`,
+  `astro.config.mjs`, `static/admin/**`), schema (`src/content.config.ts`),
+  theme (`vendor/theme/**`), workflows (`.github/**`), `package.json`, or
+  lockfiles. A PR mixing content with code/config must be split into
+  separate PRs.
+- Evidence files are immutable source documents: add them under
+  `static/evidence/<case-slug>/` exactly as received (byte-identical copies
+  — no reformatting, no re-encoding); research/audit notes go under
+  `static/evidence/<case-slug>/research-notes/`. Never edit, rename, or
+  delete published evidence — corrections go in content, not evidence.
+  Reference evidence by site-rooted paths (`/evidence/…`) — the renderer
+  links them as-is.
+- Content-only PRs may auto-merge when gates are green (CI validates all
+  content via Zod at build). Schema, theme, workflow, or config changes
   always require human review.
-- Evidence files go to `static/evidence/<case-id>/…` and are referenced by
-  site-rooted paths (`/evidence/…`) — the renderer links them as-is.
 
 ## Commands
 

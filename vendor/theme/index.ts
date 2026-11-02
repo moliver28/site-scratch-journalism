@@ -1,5 +1,5 @@
 /**
- * @sitefactory/theme public surface (pure logic only — components are
+ * @moliver28/theme public surface (pure logic only — components are
  * consumed via the exports subpaths and compiled by the site's Astro).
  */
 export {

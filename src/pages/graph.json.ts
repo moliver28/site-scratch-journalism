@@ -1,5 +1,5 @@
 import { getCollection } from 'astro:content';
-import { compileGraph } from '@sitefactory/theme/graph/compiler';
+import { compileGraph } from '@moliver28/theme/graph/compiler';
 
 /**
  * Build-time graph document for the island. Entities + edges → static JSON.

@@ -10,7 +10,7 @@
     "typecheck": "astro check"
   },
   "dependencies": {
-    "@sitefactory/theme": "file:./vendor/theme",
+    "@moliver28/theme": "file:./vendor/theme",
     "astro": "^7.4.4"
   },
   "devDependencies": {

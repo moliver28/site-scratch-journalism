@@ -11,8 +11,8 @@ template:
   version: 0.1.0
 
 theme:
-  name: "@sitefactory/theme"
-  version: 0.1.0
+  name: "@moliver28/theme"
+  version: 0.2.0
   distribution: vendored
   path: vendor/theme
 

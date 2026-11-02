@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '@sitefactory/theme/layouts/BaseLayout.astro';
+import BaseLayout from '@moliver28/theme/layouts/BaseLayout.astro';
 
 const entities = (await getCollection('entities')).sort((a, b) =>
   String(a.data.name ?? a.id).localeCompare(String(b.data.name ?? b.id)),

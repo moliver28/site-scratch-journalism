@@ -1,7 +1,7 @@
 # Scratch Journalism Site
 
 Investigative reporting site built with [sitefactory](https://github.com/moliver28/sitefactory)
-(journalism template v0.1.0, @sitefactory/theme 0.1.0).
+(journalism template v0.1.0, @moliver28/theme 0.2.0).
 
 - Live: https://moliver28.github.io/site-scratch-journalism/
 - PR previews: `https://moliver28.github.io/site-scratch-journalism/pr-preview/pr-<n>/`
@@ -16,7 +16,7 @@ Investigative reporting site built with [sitefactory](https://github.com/moliver
 | `src/content/custom-entities/` | Fast path for brand-new entity kinds |
 | `static/evidence/` | Source documents, referenced by content |
 | `static/admin/` | Sveltia CMS (staff-only, `/admin/`) |
-| `vendor/theme/` | Vendored `@sitefactory/theme` (pinned via `site.config.yaml`) |
+| `vendor/theme/` | Vendored `@moliver28/theme` (pinned via `site.config.yaml`) |
 | `site.config.yaml` | Machine-readable site identity for factory tooling |
 | `AGENTS.md` | Editorial + agent rules (read before writing content) |
 
@@ -32,6 +32,6 @@ npm run typecheck  # astro check
 ## Updating the theme
 
 The theme is vendored (`file:./vendor/theme`) and pinned in `site.config.yaml`.
-Theme updates ship as a new `@sitefactory/theme` version; update `vendor/theme`
+Theme updates ship as a new `@moliver28/theme` version; update `vendor/theme`
 to that version and let CI rebuild. See sitefactory's `AGENTS.md` for the
 update procedure.

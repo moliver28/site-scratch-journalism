@@ -8,7 +8,12 @@
   </head>
   <body>
     <!-- Staff-only editing UI. Exception to the no-third-party-scripts rule:
-         loaded only on /admin/, never linked from content pages. -->
-    <script src="https://unpkg.com/@sveltia/cms@0.256.1/dist/sveltia-cms.js"></script>
+         loaded only on /admin/, never linked from content pages. Version
+         pinned + SRI; bump the hash together with the version. -->
+    <script
+      src="https://unpkg.com/@sveltia/cms@0.256.1/dist/sveltia-cms.js"
+      integrity="sha384-LPT86oZkLhmoF84O1jKZBSaFJOVvKv8sjXDKap1SOaSwzbC8F6HH7rTJWekmAzG9"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>

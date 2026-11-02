@@ -1,7 +1,9 @@
 ---
 /**
- * URL / link fields. Only http(s) is linked — anything else renders as text
- * (no javascript:, data:, or unknown-scheme URLs reach the DOM as hrefs).
+ * URL / link fields. http(s) values link externally (rel noopener); site-
+ * rooted values (/…) link internally with the site's base path prefixed.
+ * Only http(s), https-protocol-relative-free internal paths, and plain text
+ * reach the DOM — no javascript: or data: URLs become hrefs.
  */
 import type { FieldView } from '../blocks/fields';
 
@@ -10,14 +12,17 @@ interface Props {
 }
 const { field } = Astro.props;
 const href = typeof field.value === 'string' ? field.value.trim() : '';
-const safe = /^https?:\/\//i.test(href) ? href : '';
-const external = safe.startsWith('https://') || safe.startsWith('http://');
+const isExternal = /^https?:\/\//i.test(href);
+const isInternal = href.startsWith('/') && !href.startsWith('//');
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const safe = isExternal ? href : isInternal ? `${base}${href.slice(1)}` : '';
+const label = isExternal ? safe.replace(/^https?:\/\//i, '') : isInternal ? safe.slice(base.length) : '';
 ---
 
 {
   safe !== '' ? (
-    <a href={safe} class="sf-link" rel={external ? 'noopener noreferrer' : undefined}>
-      {safe.replace(/^https?:\/\//i, '')}
+    <a href={safe} class="sf-link" rel={isExternal ? 'noopener noreferrer' : undefined}>
+      {label}
     </a>
   ) : (
     <span>{String(field.value)}</span>

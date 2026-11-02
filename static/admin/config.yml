@@ -8,7 +8,7 @@ backend:
 media_folder: static/uploads
 public_path: /site-scratch-journalism/uploads
 site_url: https://moliver28.github.io/site-scratch-journalism/
-base_url: /site-scratch-journalism/admin
+base_url: https://moliver28.github.io
 locale: en
 
 collections:

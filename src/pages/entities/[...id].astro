@@ -15,6 +15,7 @@ const data = entry.data as Record<string, unknown>;
 ---
 
 <ContentPage
+  siteName="Scratch Journalism Site"
   title={String(data.name ?? entry.id)}
   description={typeof data.summary === 'string' ? data.summary : undefined}
   kicker={String(data.type ?? 'entity')}

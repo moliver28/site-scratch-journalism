@@ -1,0 +1,53 @@
+backend:
+  name: github
+  repo: moliver28/site-scratch-journalism
+  branch: main
+  # Editorial Workflow: edits open draft PRs instead of committing directly.
+  publish_mode: editorial_workflow
+
+media_folder: static/uploads
+public_path: /site-scratch-journalism/uploads
+site_url: https://moliver28.github.io/site-scratch-journalism/
+base_url: https://moliver28.github.io
+locale: en
+
+collections:
+  - name: pages
+    label: Pages
+    folder: src/content/pages
+    format: frontmatter
+    create: true
+    slug: '{{slug}}'
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Description, name: description, widget: string, required: false }
+      - { label: Order, name: order, widget: number, default: 10 }
+      - { label: Body, name: body, widget: markdown }
+
+  - name: entities
+    label: Entities
+    folder: src/content/entities
+    format: yaml
+    create: true
+    slug: '{{slug}}'
+    fields:
+      - { label: Name, name: name, widget: string }
+      - label: Type
+        name: type
+        widget: select
+        default: person
+        options: [person, organisation, event, place]
+      - { label: Summary, name: summary, widget: text, required: false }
+      # Free-form fields: add any key; the theme renders unknown fields
+      # automatically (see AGENTS.md).
+
+  - name: custom_entities
+    label: Custom entities
+    folder: src/content/custom-entities
+    format: yaml
+    create: true
+    slug: '{{slug}}'
+    fields:
+      - { label: Name, name: name, widget: string }
+      - { label: Kind, name: kind, widget: string, default: document }
+      - { label: Summary, name: summary, widget: text, required: false }

@@ -1,0 +1,48 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@sitefactory/theme/layouts/BaseLayout.astro';
+
+const entities = (await getCollection('entities')).sort((a, b) =>
+  String(a.data.name ?? a.id).localeCompare(String(b.data.name ?? b.id)),
+);
+const pages = (await getCollection('pages')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Scratch Journalism Site" description="Deploy smoke for the sitefactory journalism template." siteName="Scratch Journalism Site">
+  <h1>Scratch Journalism Site</h1>
+  <p>
+    Investigations, entities, and the connections between them — the
+    <a href={`${import.meta.env.BASE_URL}graph/`}>entity graph</a> and the
+    profiles below read the same data.
+  </p>
+
+  <h2>Cases</h2>
+  <ul>
+    {
+      pages.map((page) => (
+        <li>
+          <a href={`${import.meta.env.BASE_URL}pages/${page.id}/`}>{page.data.title}</a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>Entities</h2>
+  <ul>
+    {
+      entities.map((entity) => (
+        <li>
+          <a href={`${import.meta.env.BASE_URL}entities/${entity.id}/`}>{String(entity.data.name ?? entity.id)}</a>{' '}
+          <span class="sf-index-kind">{String(entity.data.type ?? 'entity')}</span>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
+
+<style>
+  .sf-index-kind {
+    color: var(--sf-color-muted);
+    font-size: 0.875rem;
+  }
+</style>

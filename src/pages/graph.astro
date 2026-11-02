@@ -1,0 +1,21 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@sitefactory/theme/layouts/BaseLayout.astro';
+import GraphIsland from '@sitefactory/theme/graph/GraphIsland.astro';
+
+const edgeCount = (await getCollection('edges')).length;
+---
+
+<BaseLayout
+  title="Entity graph"
+  description="Interactive relationship graph, compiled from the same YAML that drives the profile pages."
+  siteName="Scratch Journalism Site"
+>
+  <h1>Entity graph</h1>
+  <p>
+    Nodes are entities; lines are typed, confidence-weighted edges
+    ({edgeCount} total). Click a node for its card; filter by kind; switch to
+    the list view if WebGL is not for you.
+  </p>
+  <GraphIsland src={`${import.meta.env.BASE_URL}graph.json`} height="32rem" />
+</BaseLayout>

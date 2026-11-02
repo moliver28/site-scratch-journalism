@@ -1,0 +1,25 @@
+---
+/**
+ * URL / link fields. Only http(s) is linked — anything else renders as text
+ * (no javascript:, data:, or unknown-scheme URLs reach the DOM as hrefs).
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const href = typeof field.value === 'string' ? field.value.trim() : '';
+const safe = /^https?:\/\//i.test(href) ? href : '';
+const external = safe.startsWith('https://') || safe.startsWith('http://');
+---
+
+{
+  safe !== '' ? (
+    <a href={safe} class="sf-link" rel={external ? 'noopener noreferrer' : undefined}>
+      {safe.replace(/^https?:\/\//i, '')}
+    </a>
+  ) : (
+    <span>{String(field.value)}</span>
+  )
+}

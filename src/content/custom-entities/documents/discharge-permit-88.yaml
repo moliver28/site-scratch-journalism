@@ -1,0 +1,9 @@
+name: Discharge permit #88
+kind: document
+summary: >
+  EXAMPLE CONTENT — the contested Argent Mills discharge permit, filed as a
+  custom entity kind to show the fast path for new entity types.
+issuer: Argent Basin Authority
+issued_on: 2023-01-15
+status: under_review
+source: /evidence/the-river-case/permit-88-redacted.pdf

@@ -1,0 +1,476 @@
+---
+/**
+ * Interactive entity graph island. Server component emits only markup; the
+ * bundled script renders everything client-side from a static graph.json
+ * (built by the theme's graph compiler), so there is no hydration mismatch
+ * and no third-party request.
+ *
+ * Interactions: click node → entity card, kind filters, list-view toggle.
+ * All dynamic text is written via textContent (no HTML injection surface).
+ */
+interface Props {
+  /** URL of the compiled graph document. */
+  src?: string;
+  height?: string;
+}
+const { src = '/graph.json', height = '30rem' } = Astro.props;
+---
+
+<section class="sf-graph" data-sf-graph data-src={src} style={`--sf-graph-h:${height}`}>
+  <header class="sf-graph-bar">
+    <fieldset class="sf-graph-filters">
+      <legend class="sf-visually-hidden">Filter entities by kind</legend>
+      <div class="sf-graph-filters-inner" data-sf-filters></div>
+    </fieldset>
+    <button type="button" class="sf-graph-toggle" data-sf-toggle-list aria-expanded="false" aria-controls="sf-graph-list">
+      List view
+    </button>
+  </header>
+  <div class="sf-graph-body">
+    <div class="sf-graph-stage" data-sf-stage role="application" aria-label="Interactive entity graph. Click a node to inspect the entity.">
+      <p class="sf-graph-status" data-sf-status>Loading graph…</p>
+    </div>
+    <aside class="sf-graph-list" id="sf-graph-list" data-sf-list hidden>
+      <ul data-sf-list-items></ul>
+    </aside>
+    <article class="sf-graph-card" data-sf-card hidden aria-live="polite"></article>
+  </div>
+</section>
+
+<style>
+  .sf-graph {
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    overflow: hidden;
+    margin: var(--sf-space-3) 0;
+  }
+
+  .sf-graph-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sf-space-2);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sf-space-2) var(--sf-space-3);
+    border-bottom: var(--sf-line);
+  }
+
+  .sf-graph-filters {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sf-space-2);
+  }
+
+  .sf-graph-filters-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sf-space-1) var(--sf-space-3);
+  }
+
+  .sf-graph-toggle {
+    font: inherit;
+    font-size: 0.875rem;
+    padding: var(--sf-space-1) var(--sf-space-2);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    background: var(--sf-color-surface);
+    color: var(--sf-color-ink);
+    cursor: pointer;
+  }
+
+  .sf-graph-toggle[aria-expanded='true'] {
+    background: var(--sf-color-accent-soft);
+    border-color: var(--sf-color-accent);
+  }
+
+  .sf-graph-body {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .sf-graph-stage {
+    height: var(--sf-graph-h);
+  }
+
+  .sf-graph-list {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    background: var(--sf-color-surface);
+    padding: var(--sf-space-3);
+  }
+
+  .sf-graph-card {
+    position: absolute;
+    top: var(--sf-space-3);
+    right: var(--sf-space-3);
+    width: min(var(--sf-graph-card-w), calc(100% - 2 * var(--sf-space-3)));
+    max-height: calc(100% - 2 * var(--sf-space-3));
+    overflow: auto;
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    box-shadow: 0 2px 8px rgba(21, 36, 48, 0.12);
+    padding: var(--sf-space-3);
+  }
+</style>
+
+<!--
+  Styles for elements created at runtime by the island script. These must be
+  global (namespaced under [data-sf-graph]) because Astro scoped styles key
+  off build-time attributes that JS-created nodes do not carry.
+-->
+<style is:global>
+  [data-sf-graph] .sf-graph-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  [data-sf-graph] .sf-dot {
+    width: 0.75em;
+    height: 0.75em;
+    border-radius: 50%;
+    display: inline-block;
+    flex: none;
+  }
+
+  [data-sf-graph] .sf-graph-list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  [data-sf-graph] .sf-graph-list button {
+    font: inherit;
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    color: var(--sf-color-ink);
+  }
+
+  [data-sf-graph] .sf-graph-list button:hover {
+    background: var(--sf-color-accent-soft);
+  }
+
+  [data-sf-graph] .sf-card-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    border: 0;
+    background: none;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--sf-color-muted);
+    padding: 0.25rem;
+  }
+
+  [data-sf-graph] .sf-kind-chip {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--sf-color-surface);
+    border-radius: var(--sf-radius);
+    padding: 0 0.4em;
+    margin-bottom: 0.25rem;
+  }
+
+  [data-sf-graph] .sf-graph-card h3 {
+    margin: 0 1.5rem 0.25rem 0;
+    font-size: 1.125rem;
+  }
+
+  [data-sf-graph] .sf-graph-card dl {
+    margin: 0.5rem 0;
+  }
+
+  [data-sf-graph] .sf-graph-card dl > div {
+    margin: 0.25rem 0;
+  }
+
+  [data-sf-graph] .sf-graph-card dt {
+    font-size: 0.75rem;
+    color: var(--sf-color-muted);
+  }
+
+  [data-sf-graph] .sf-graph-card dd {
+    margin: 0;
+    margin-inline-start: 0;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+  }
+
+  [data-sf-graph] .sf-graph-status {
+    color: var(--sf-color-muted);
+    padding: 1.5rem;
+  }
+</style>
+
+<script>
+  import Graph from 'graphology';
+  import forceAtlas2 from 'graphology-layout-forceatlas2';
+  import Sigma from 'sigma';
+  import { seedCircularPositions, applyLayoutScaledSizes } from './layout';
+
+  interface GraphNode {
+    id: string;
+    label: string;
+    kind: string;
+    color: string;
+    size: number;
+    href: string;
+    fields: Record<string, unknown>;
+  }
+  interface GraphEdge {
+    id: string;
+    source: string;
+    target: string;
+    kind: string;
+    color: string;
+    weight: number;
+    evidence: string[];
+    confidence: string;
+  }
+  interface GraphDoc {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+    legend: Array<{ kind: string; color: string; nodeCount: number }>;
+  }
+
+  declare global {
+    interface HTMLElement {
+      /** Test hook set by the island script on successful mount. */
+      __sf?: Record<string, unknown>;
+    }
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    return node;
+  }
+
+  function setStatus(stage: HTMLElement, message: string): void {
+    let status = stage.querySelector<HTMLElement>('[data-sf-status]');
+    if (!status) {
+      status = el('p', 'sf-graph-status');
+      status.setAttribute('data-sf-status', '');
+      stage.append(status);
+    }
+    status.textContent = message;
+  }
+
+  /** Dates serialize to full ISO in graph.json; show the date part only. */
+  function formatValue(value: unknown): string {
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 10);
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  }
+
+  function renderCard(card: HTMLElement, node: GraphNode, legendColor: string): void {
+    card.replaceChildren();
+
+    const close = el('button', 'sf-card-close');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close entity card');
+    close.textContent = '×';
+
+    const heading = el('h3');
+    heading.textContent = node.label;
+
+    const chip = el('span', 'sf-kind-chip');
+    chip.textContent = node.kind;
+    chip.style.backgroundColor = legendColor;
+
+    const dl = el('dl');
+    for (const [key, value] of Object.entries(node.fields)) {
+      if (value === null || value === undefined) continue;
+      const row = el('div');
+      const dt = el('dt');
+      dt.textContent = key.replace(/[_-]+/g, ' ');
+      const dd = el('dd');
+      dd.textContent = formatValue(value);
+      row.append(dt, dd);
+      dl.append(row);
+    }
+
+    const link = el('a');
+    link.href = node.href;
+    link.textContent = 'Open profile';
+
+    card.append(close, chip, heading, dl, link);
+    card.hidden = false;
+    close.addEventListener('click', () => {
+      card.hidden = true;
+    });
+  }
+
+  async function mount(root: HTMLElement): Promise<void> {
+    const stage = root.querySelector<HTMLElement>('[data-sf-stage]');
+    const filtersRoot = root.querySelector<HTMLElement>('[data-sf-filters]');
+    const listRoot = root.querySelector<HTMLElement>('[data-sf-list]');
+    const listItems = root.querySelector<HTMLElement>('[data-sf-list-items]');
+    const card = root.querySelector<HTMLElement>('[data-sf-card]');
+    const toggle = root.querySelector<HTMLButtonElement>('[data-sf-toggle-list]');
+    if (!stage || !filtersRoot || !listRoot || !listItems || !card || !toggle) return;
+
+    let doc: GraphDoc;
+    try {
+      const res = await fetch(root.getAttribute('data-src') ?? '/graph.json', { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      doc = (await res.json()) as GraphDoc;
+    } catch (err) {
+      setStatus(stage, `Could not load the graph (${err instanceof Error ? err.message : 'unknown error'}). Check that the build produced graph.json.`);
+      return;
+    }
+
+    if (doc.nodes.length === 0) {
+      setStatus(stage, 'No entities yet. Add YAML files to content/entities and rebuild.');
+      return;
+    }
+
+    const graph = new Graph<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>>({
+      multi: true,
+      type: 'undirected',
+    });
+    for (const node of doc.nodes) {
+      graph.addNode(node.id, { ...node });
+    }
+    for (const edge of doc.edges) {
+      graph.addEdgeWithKey(edge.id, edge.source, edge.target, { color: edge.color, size: edge.weight });
+    }
+
+    // FA2 requires numeric x/y seeds on every node (NaN otherwise).
+    seedCircularPositions(graph);
+    forceAtlas2.assign(graph, {
+      iterations: 120,
+      settings: forceAtlas2.inferSettings(graph),
+    });
+    // Sizes in position units, proportional to layout extent (zoom-stable).
+    applyLayoutScaledSizes(graph);
+
+    const kindColors = new Map(doc.legend.map((l) => [l.kind, l.color]));
+    // isHidden is a sigma built-in node state (we toggle it via setNodeState);
+    // only isActive (node) and hasSelection (graph) are custom here. Generic
+    // slots: N, E, G, NS, ES, GS — ES stays empty (base edge states suffice).
+    interface IslandNodeState {
+      isActive: boolean;
+    }
+    interface IslandGraphState {
+      hasSelection: boolean;
+    }
+    const sigma = new Sigma<
+      Record<string, unknown>,
+      Record<string, unknown>,
+      Record<string, unknown>,
+      IslandNodeState,
+      Record<never, never>,
+      IslandGraphState
+    >(graph, stage, {
+      customNodeState: { isActive: false },
+      customGraphState: { hasSelection: false },
+      styles: {
+        nodes: [
+          { color: { attribute: 'color' }, size: { attribute: 'size' }, label: { attribute: 'label' } },
+          { whenState: 'isHidden', then: { visibility: 'hidden' } },
+          { whenState: 'isActive', then: { labelVisibility: 'visible' } },
+        ],
+        edges: [
+          { color: { attribute: 'color' }, size: { attribute: 'size' } },
+          { when: (_attrs, _state, graphState) => graphState.hasSelection, then: { color: '#d8dee3' } },
+        ],
+      },
+    });
+
+    let selected: string | null = null;
+    // Arrow functions (declared after the guard) keep TS narrowing for `card`.
+    const select = (id: string): void => {
+      if (selected) sigma.setNodeState(selected, { isActive: false });
+      selected = id;
+      sigma.setNodeState(id, { isActive: true });
+      sigma.setGraphState({ hasSelection: true });
+      sigma.refresh({ skipIndexation: true });
+      const node = doc.nodes.find((n) => n.id === id);
+      if (node) renderCard(card, node, kindColors.get(node.kind) ?? node.color);
+    };
+    const clearSelection = (): void => {
+      if (selected) sigma.setNodeState(selected, { isActive: false });
+      selected = null;
+      sigma.setGraphState({ hasSelection: false });
+      sigma.refresh({ skipIndexation: true });
+      card.hidden = true;
+    };
+
+    sigma.on('clickNode', ({ node }) => select(node));
+    sigma.on('clickStage', () => clearSelection());
+
+    // Mount succeeded — drop the loading/error status line.
+    stage.querySelector('[data-sf-status]')?.remove();
+
+    // Test hook: lets e2e probes assert on renderer state without scraping.
+    root.__sf = { sigma, graph, doc };
+
+    // Kind filters: toggle the isHidden node state per legend kind.
+    for (const entry of doc.legend) {
+      const label = el('label', 'sf-graph-filter');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = true;
+      const dot = el('span', 'sf-dot');
+      dot.style.backgroundColor = entry.color;
+      const text = el('span');
+      text.textContent = `${entry.kind} (${entry.nodeCount})`;
+      label.append(box, dot, text);
+      filtersRoot.append(label);
+      box.addEventListener('change', () => {
+        for (const node of doc.nodes) {
+          if (node.kind === entry.kind) {
+            sigma.setNodeState(node.id, { isHidden: !box.checked });
+          }
+        }
+        if (selected && !box.checked) {
+          const sel = doc.nodes.find((n) => n.id === selected);
+          if (sel && sel.kind === entry.kind) clearSelection();
+        }
+        sigma.refresh({ skipIndexation: true });
+      });
+    }
+
+    // List view: one button per entity.
+    for (const node of doc.nodes) {
+      const li = el('li');
+      const btn = el('button');
+      btn.type = 'button';
+      const dot = el('span', 'sf-dot');
+      dot.style.backgroundColor = node.color;
+      const text = el('span');
+      text.textContent = `${node.label} (${node.kind})`;
+      btn.append(dot, text);
+      btn.addEventListener('click', () => select(node.id));
+      li.append(btn);
+      listItems.append(li);
+    }
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      listRoot.hidden = open;
+    });
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-sf-graph]')) {
+    void mount(root);
+  }
+</script>

@@ -1,0 +1,23 @@
+---
+/**
+ * Rich text: paragraph-level rendering of long-form strings.
+ * v0.1 splits on blank lines into <p> elements; Astro auto-escapes
+ * interpolations, so no untrusted-markup surface is introduced.
+ * (Markdown sources belonging to a site's own collections should use the
+ * site's `render()` pipeline instead — this component is for data fields.)
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const paragraphs = String(field.value)
+  .split(/\n{2,}/)
+  .map((p) => p.trim())
+  .filter((p) => p !== '');
+---
+
+<div class="sf-richtext">
+  {paragraphs.map((p) => <p>{p}</p>)}
+</div>

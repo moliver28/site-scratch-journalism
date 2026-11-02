@@ -1,0 +1,11 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_src_path: templates/journalism
+analytics: none
+author: sitefactory
+description: Deploy smoke for the sitefactory journalism template.
+graph_height: 32rem
+owner: moliver28
+repo: site-scratch-journalism
+site_name: Scratch Journalism Site
+theme_version: 0.1.0
+vertical: journalism

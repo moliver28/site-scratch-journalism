@@ -1,0 +1,32 @@
+---
+/**
+ * Generic fields block: renders any Record<string, unknown> as a definition
+ * list, routing each field through the inference-driven renderer map. This
+ * is the auto-adapt path — unknown fields need nothing but data.
+ */
+import { fieldsOf } from './fields';
+import { fieldRenderers } from '../renderers/index';
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block, skip } = Astro.props;
+const fields = fieldsOf(block, skip);
+---
+
+<dl class="sf-block">
+  {
+    fields.map((field) => {
+      const Renderer = fieldRenderers[field.type];
+      return (
+        <div class="sf-field" data-field-type={field.type}>
+          <dt class="sf-field-label">{field.label}</dt>
+          <dd class="sf-field-value">
+            <Renderer field={field} />
+          </dd>
+        </div>
+      );
+    })
+  }
+</dl>

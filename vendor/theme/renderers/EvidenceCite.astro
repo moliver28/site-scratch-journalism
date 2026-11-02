@@ -1,0 +1,28 @@
+---
+/**
+ * Evidence-citation fields: file paths or URLs pointing at source material.
+ * http(s) values link out; site-rooted paths (/…) link internally; anything
+ * else renders as <code> so a malformed reference stays visible instead of
+ * silently disappearing.
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const raw = typeof field.value === 'string' ? field.value.trim() : '';
+const isExternal = /^https?:\/\//i.test(raw);
+const isInternal = raw.startsWith('/') && !raw.startsWith('//');
+const label = raw.split('/').pop() || raw;
+---
+
+{
+  isExternal || isInternal ? (
+    <a class="sf-evidence-cite" href={raw} rel={isExternal ? 'noopener noreferrer' : undefined}>
+      {label}
+    </a>
+  ) : (
+    <code class="sf-evidence-cite">{raw}</code>
+  )
+}

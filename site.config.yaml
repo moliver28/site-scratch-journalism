@@ -1,0 +1,26 @@
+# Machine-readable site identity. The factory's ops tooling reads this file;
+# humans read AGENTS.md. Keep both in sync.
+site: site-scratch-journalism
+owner: moliver28
+description: Deploy smoke for the sitefactory journalism template.
+author: sitefactory
+vertical: journalism
+
+template:
+  name: journalism
+  version: 0.1.0
+
+theme:
+  name: "@sitefactory/theme"
+  version: 0.1.0
+  distribution: vendored
+  path: vendor/theme
+
+graph:
+  height: 32rem
+
+deploy:
+  target: github-pages
+  base: /site-scratch-journalism/
+
+analytics: none

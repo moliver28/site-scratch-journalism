@@ -1,0 +1,44 @@
+---
+/**
+ * Table fields: arrays of arrays. The first row becomes the header when it
+ * is all strings. Cells are escaped by Astro's expression handling.
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const rows = Array.isArray(field.value) ? field.value : [];
+const grid = rows
+  .filter((r): r is unknown[] => Array.isArray(r))
+  .map((r) => r.map((c) => (typeof c === 'object' ? JSON.stringify(c) : String(c))));
+const hasHeader = grid.length > 1 && grid[0].length > 0 && grid[0].every((c) => c.trim() !== '');
+const bodyRows = hasHeader ? grid.slice(1) : grid;
+const columns = Math.max(0, ...grid.map((r) => r.length));
+---
+
+{
+  columns > 0 && (
+    <table class="sf-table">
+      {hasHeader && (
+        <thead>
+          <tr>
+            {grid[0].map((c) => (
+              <th scope="col">{c}</th>
+            ))}
+          </tr>
+        </thead>
+      )}
+      <tbody>
+        {bodyRows.map((row) => (
+          <tr>
+            {Array.from({ length: columns }, (_, i) => (
+              <td>{row[i] ?? ''}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}

@@ -1,0 +1,24 @@
+---
+/**
+ * Generic scalar fallback: strings, numbers, booleans, dates.
+ * Dates render as <time datetime> so machines read what humans see.
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const { value, type } = field;
+const dateValue = value instanceof Date ? value.toISOString().slice(0, 10) : typeof value === 'string' ? value : '';
+---
+
+{
+  type === 'date' && dateValue !== '' ? (
+    <time datetime={dateValue}>{dateValue}</time>
+  ) : type === 'boolean' ? (
+    <span data-sf-boolean={String(value)}>{value ? 'Yes' : 'No'}</span>
+  ) : (
+    <span>{String(value)}</span>
+  )
+}

@@ -1,0 +1,40 @@
+---
+/**
+ * Fast path for brand-new entity kinds: a generic list over the
+ * custom-entities collection. No component changes needed for a new kind —
+ * add a YAML file and rebuild.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@sitefactory/theme/layouts/BaseLayout.astro';
+
+const items = (await getCollection('customEntities')).sort((a, b) =>
+  String(a.data.name ?? a.id).localeCompare(String(b.data.name ?? b.id)),
+);
+const kinds = [...new Set(items.map((i) => String(i.data.kind ?? 'custom')))];
+---
+
+<BaseLayout
+  title="Custom entities"
+  description="Newly added entity kinds, rendered generically."
+  siteName="Scratch Journalism Site"
+>
+  <h1>Custom entities</h1>
+  <p>Kinds present: {kinds.join(', ') || 'none yet'}. Add a YAML file to <code>src/content/custom-entities/</code> and rebuild — this page renders it automatically.</p>
+  <ul>
+    {
+      items.map((item) => (
+        <li>
+          <a href={`${import.meta.env.BASE_URL}custom-entities/${item.id}/`}>{String(item.data.name ?? item.id)}</a>{' '}
+          <span class="sf-ce-kind">{String(item.data.kind ?? 'custom')}</span>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
+
+<style>
+  .sf-ce-kind {
+    color: var(--sf-color-muted);
+    font-size: 0.875rem;
+  }
+</style>

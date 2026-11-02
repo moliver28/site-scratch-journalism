@@ -1,0 +1,24 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ContentPage from '@sitefactory/theme/layouts/ContentPage.astro';
+
+export async function getStaticPaths() {
+  const items = await getCollection('customEntities');
+  return items.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'customEntities'>;
+}
+const { entry } = Astro.props;
+const data = entry.data as Record<string, unknown>;
+---
+
+<ContentPage
+  title={String(data.name ?? entry.id)}
+  description={typeof data.summary === 'string' ? data.summary : undefined}
+  kicker={String(data.kind ?? 'custom')}
+  block={data}
+  siteName="Scratch Journalism Site"
+  skip={['name', 'kind']}
+/>

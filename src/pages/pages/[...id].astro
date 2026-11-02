@@ -1,0 +1,32 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '@sitefactory/theme/layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  return pages.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'pages'>;
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<BaseLayout title={entry.data.title} description={entry.data.description} siteName="Scratch Journalism Site">
+  <article class="sf-page">
+    <h1>{entry.data.title}</h1>
+    <Content />
+  </article>
+</BaseLayout>
+
+<style>
+  .sf-page {
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    padding: var(--sf-space-4);
+    margin-top: var(--sf-space-4);
+  }
+</style>

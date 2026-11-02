@@ -1,0 +1,23 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ContentPage from '@sitefactory/theme/layouts/ContentPage.astro';
+
+export async function getStaticPaths() {
+  const entities = await getCollection('entities');
+  return entities.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'entities'>;
+}
+const { entry } = Astro.props;
+const data = entry.data as Record<string, unknown>;
+---
+
+<ContentPage
+  title={String(data.name ?? entry.id)}
+  description={typeof data.summary === 'string' ? data.summary : undefined}
+  kicker={String(data.type ?? 'entity')}
+  block={data}
+  skip={['name', 'type']}
+/>

@@ -1,0 +1,37 @@
+---
+/**
+ * Image fields: either a URL string (via an image-shaped key) or an object
+ * { url|src, alt?, caption? }. Alt falls back to the caption, then the field
+ * label — decorative unknowns never break the page.
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+
+let src = '';
+let alt = field.label;
+let caption: string | undefined;
+if (typeof field.value === 'string') {
+  src = field.value;
+} else if (typeof field.value === 'object' && field.value !== null) {
+  const v = field.value as Record<string, unknown>;
+  const rawSrc = v.url ?? v.src ?? v.image;
+  if (typeof rawSrc === 'string') src = rawSrc;
+  if (typeof v.alt === 'string') alt = v.alt;
+  if (typeof v.caption === 'string') caption = v.caption;
+}
+
+const safeSrc = /^https?:\/\//i.test(src) || src.startsWith('/') ? src : '';
+---
+
+{
+  safeSrc !== '' && (
+    <figure class="sf-image">
+      <img src={safeSrc} alt={alt} loading="lazy" decoding="async" />
+      {caption && <figcaption>{caption}</figcaption>}
+    </figure>
+  )
+}

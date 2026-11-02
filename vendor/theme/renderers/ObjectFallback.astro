@@ -1,0 +1,33 @@
+---
+/**
+ * Last-resort object fallback: renders any unrecognized shape as a
+ * definition list, one level deep, JSON-encoding deeper values. Unknown
+ * structure stays visible and auditable instead of being dropped.
+ */
+import type { FieldView } from '../blocks/fields';
+import { humanize } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const entries =
+  typeof field.value === 'object' && field.value !== null && !Array.isArray(field.value)
+    ? Object.entries(field.value as Record<string, unknown>)
+    : [];
+---
+
+{
+  entries.length > 0 ? (
+    <dl class="sf-object">
+      {entries.map(([k, v]) => (
+        <div>
+          <dt>{humanize(k)}</dt>
+          <dd>{typeof v === 'object' ? <code>{JSON.stringify(v)}</code> : String(v)}</dd>
+        </div>
+      ))}
+    </dl>
+  ) : (
+    <code>{JSON.stringify(field.value)}</code>
+  )
+}

@@ -1,0 +1,38 @@
+---
+/**
+ * List fields: arrays of scalars render as a plain list; arrays of objects
+ * render each object's fields inline (one level deep, then JSON) so unknown
+ * nested shapes still surface instead of vanishing.
+ */
+import type { FieldView } from '../blocks/fields';
+import { humanize } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const items = Array.isArray(field.value) ? field.value : [];
+---
+
+{
+  items.length > 0 && (
+    <ul class="sf-list">
+      {items.map((item) => (
+        <li>
+          {typeof item === 'object' && item !== null ? (
+            <dl class="sf-list-object">
+              {Object.entries(item as Record<string, unknown>).map(([k, v]) => (
+                <div>
+                  <dt>{humanize(k)}</dt>
+                  <dd>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <span>{String(item)}</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}

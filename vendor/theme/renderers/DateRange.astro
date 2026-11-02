@@ -1,0 +1,37 @@
+---
+/**
+ * Date-range fields: { start|from, end|to } with ISO-ish date strings.
+ * Renders as a <time> pair separated by an en dash (standard for ranges).
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+
+const iso = (v: unknown): string => {
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return typeof v === 'string' ? v : '';
+};
+
+let start = '';
+let end = '';
+if (typeof field.value === 'object' && field.value !== null) {
+  const v = field.value as Record<string, unknown>;
+  start = iso(v.start ?? v.from);
+  end = iso(v.end ?? v.to);
+}
+---
+
+{
+  start !== '' || end !== '' ? (
+    <span class="sf-daterange">
+      {start !== '' && <time datetime={start}>{start}</time>}
+      {start !== '' && end !== '' && <span aria-hidden="true"> – </span>}
+      {end !== '' && <time datetime={end}>{end}</time>}
+    </span>
+  ) : (
+    <span>{String(field.value)}</span>
+  )
+}

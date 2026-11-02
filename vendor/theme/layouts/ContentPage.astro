@@ -1,0 +1,48 @@
+---
+/**
+ * Content-page layout: title, optional kind chip, and one block region.
+ * The block region accepts any data object — the auto-adapt contract.
+ */
+import BaseLayout from './BaseLayout.astro';
+import Block from '../blocks/Block.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  siteName?: string;
+  /** Optional small label above the title (entity kind, page category). */
+  kicker?: string;
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { title, description, siteName, kicker, block, skip } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} siteName={siteName}>
+  <article class="sf-content-page">
+    {kicker && <p class="sf-kicker">{kicker}</p>}
+    <h1>{title}</h1>
+    <Block block={block} skip={skip} />
+  </article>
+</BaseLayout>
+
+<style>
+  .sf-content-page {
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    padding: var(--sf-space-4);
+    margin-top: var(--sf-space-4);
+  }
+
+  .sf-kicker {
+    margin: var(--sf-space-3) 0 0;
+    color: var(--sf-color-accent);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .sf-kicker + h1 {
+    margin-top: var(--sf-space-1);
+  }
+</style>

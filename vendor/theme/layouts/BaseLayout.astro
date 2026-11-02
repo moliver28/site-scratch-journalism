@@ -1,0 +1,175 @@
+---
+/**
+ * Base layout: document shell, tokens, global element styles.
+ * Sites override the tokens (or this file) to re-skin; components never
+ * hard-code colors or spacing.
+ */
+import '../tokens/tokens.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  siteName?: string;
+}
+const { title, description, siteName = 'sitefactory' } = Astro.props;
+const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {description && <meta name="description" content={description} />}
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <a class="sf-skip-link" href="#sf-main">Skip to content</a>
+    <header class="sf-site-header">
+      <a class="sf-site-home" href="/">{siteName}</a>
+      <slot name="site-nav" />
+    </header>
+    <main id="sf-main" class="sf-main">
+      <slot />
+    </main>
+    <footer class="sf-site-footer">
+      <slot name="site-footer">
+        <p>No trackers. No third-party scripts.</p>
+      </slot>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--sf-color-bg);
+    color: var(--sf-color-ink);
+    font-family: var(--sf-font-body);
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--sf-font-display);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+    margin: var(--sf-space-4) 0 var(--sf-space-3);
+  }
+
+  h2 {
+    font-size: 1.375rem;
+    margin: var(--sf-space-4) 0 var(--sf-space-2);
+  }
+
+  p,
+  li {
+    max-width: var(--sf-measure);
+  }
+
+  a {
+    color: var(--sf-color-link);
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--sf-color-accent);
+    outline-offset: 2px;
+  }
+
+  code {
+    font-family: var(--sf-font-mono);
+    font-size: 0.875em;
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    padding: 0.1em 0.35em;
+  }
+
+  .sf-site-header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sf-space-3);
+    padding: var(--sf-space-3) var(--sf-space-4);
+    background: var(--sf-color-surface);
+    border-bottom: var(--sf-line);
+  }
+
+  .sf-site-home {
+    font-family: var(--sf-font-display);
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--sf-color-ink);
+    text-decoration: none;
+  }
+
+  .sf-site-home:hover {
+    color: var(--sf-color-accent);
+  }
+
+  .sf-main {
+    max-width: calc(var(--sf-measure) + 2 * var(--sf-space-4));
+    margin: 0 auto;
+    padding: 0 var(--sf-space-4) var(--sf-space-5);
+  }
+
+  .sf-site-footer {
+    border-top: var(--sf-line);
+    padding: var(--sf-space-3) var(--sf-space-4);
+    color: var(--sf-color-muted);
+    font-size: 0.875rem;
+  }
+
+  .sf-site-footer p {
+    margin: 0;
+  }
+
+  .sf-skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--sf-color-surface);
+    color: var(--sf-color-accent);
+    padding: var(--sf-space-2) var(--sf-space-3);
+    z-index: 10;
+  }
+
+  .sf-skip-link:focus-visible {
+    left: 0;
+  }
+
+  .sf-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>

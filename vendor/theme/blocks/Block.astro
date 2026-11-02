@@ -1,0 +1,21 @@
+---
+/**
+ * Block dispatcher: resolves a block's kind through the registry and renders
+ * it. Unknown kinds fall back to the generic fields block (never an error,
+ * never a blank) — new block types must never require theme changes.
+ */
+import { normalizeBlockKind } from './registry';
+import { resolveBlockComponent } from './components';
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block, skip } = Astro.props;
+const kind = normalizeBlockKind(block.kind ?? block.type);
+const BlockComponent = resolveBlockComponent(kind);
+---
+
+<div class="sf-block-wrap" data-block-kind={kind}>
+  <BlockComponent block={block} skip={skip} />
+</div>

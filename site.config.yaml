@@ -7,7 +7,7 @@ author: sitefactory
 vertical: journalism
 # Look & feel: @moliver28/theme tokens preset (tokens/presets/<id>/).
 # Swap + rebuild re-skins the site (no component changes).
-theme_preset: journalism-default
+theme_preset: editorial-dark
 
 template:
   name: journalism

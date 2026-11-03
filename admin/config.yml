@@ -49,5 +49,6 @@ collections:
     slug: '{{slug}}'
     fields:
       - { label: Name, name: name, widget: string }
-      - { label: Kind, name: kind, widget: string, default: document }
+      # default matches the schema default in src/content.config.ts (kind: z.string().default('custom'))
+      - { label: Kind, name: kind, widget: string, default: custom }
       - { label: Summary, name: summary, widget: text, required: false }

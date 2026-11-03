@@ -1,0 +1,25 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Trades bold
+description: >-
+  Dark-navy ground with a bold orange accent and chunky humanist type —
+  confident trade-business energy (the Craftline seed's look, minus its
+  scroll-story 3D theatrics). Lime-green success tone doubles as the
+  highlight color.
+verticals:
+  - trades
+  - smb
+attributes:
+  palette_type: dark-navy
+  type_pairing: sans-display-sans-body
+  density: roomy
+  mood: bold
+  motion: expressive
+source:
+  origin: https://github.com/formgong/craftline-astro-theme
+  license: MIT
+  attribution: >-
+    Palette and radius values pattern-mined from
+    formgong/craftline-astro-theme (MIT). Values only — no CSS, markup or
+    code copied. Accent-soft is the seed's own 14% accent-over-surface mix
+    recipe evaluated in sRGB.

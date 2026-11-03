@@ -1,0 +1,25 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Minimal academic
+description: >-
+  Paper-white minimalism with a mono-flavored display face, graphite ink and
+  one restrained blue accent — the scholarly article look of the AstroPaper
+  seed, kept to a narrow reading column (48rem) with near-square corners.
+verticals:
+  - academic
+  - editorial
+  - blog
+attributes:
+  palette_type: light-paper
+  type_pairing: mono-display-sans-body
+  density: compact
+  mood: scholarly
+  motion: none
+source:
+  origin: https://github.com/satnaing/astro-paper
+  license: MIT
+  attribution: >-
+    Palette and article-measure values pattern-mined from
+    satnaing/astro-paper (MIT). Values only — no CSS, markup or code
+    copied. Accent-soft is a 12% accent-over-white tint (own computation);
+    the dark-theme orange accent serves as the highlight value.

@@ -1,0 +1,29 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Bento portfolio
+description: >-
+  Warm-mist ground, graphite ink, lime brand blocks and distinctly rounded
+  bento cards — the freelancer-portfolio look of the SWP seed (the
+  freshest Astro 7 portfolio seed, mined for its bento IA and token file).
+  Note: the lime accent is a block/chip color in the seed, not a text
+  color — links stay graphite.
+verticals:
+  - portfolio
+  - freelancer
+  - creative
+attributes:
+  palette_type: light-mist
+  type_pairing: grotesk-display-sans-body
+  density: comfortable
+  mood: playful
+  motion: subtle
+source:
+  origin: https://github.com/Scintillaweb/swp-freelancer-portfolio
+  license: MIT
+  attribution: >-
+    Palette, radii and section rhythm values pattern-mined from
+    Scintillaweb/swp-freelancer-portfolio (MIT). Values only — no CSS,
+    markup or code copied. Accent-soft is a 20% lime-over-white tint (own
+    computation); link color is the seed's graphite token. Category stand-
+    in for the paid Jellygrid reference (license-uninspectable, listing
+    only per ops/theme-seeds.yaml).

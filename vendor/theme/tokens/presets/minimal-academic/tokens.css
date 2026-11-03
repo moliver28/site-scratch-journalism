@@ -1,0 +1,39 @@
+/*
+ * minimal-academic preset — paper-white, near-square, single restrained
+ * blue accent. Values pattern-mined from satnaing/astro-paper (MIT):
+ * palette and article measure only — no CSS or markup copied. The seed's
+ * code-flavored app font maps to a system mono display stack; no font
+ * files ship.
+ */
+:root {
+  /* Color — warm paper, graphite ink, restrained blue accent */
+  --sf-color-bg: #fdfdfd;
+  --sf-color-surface: #ffffff;
+  --sf-color-ink: #282728;
+  --sf-color-muted: #6b7280;
+  --sf-color-accent: #006cac;
+  --sf-color-accent-soft: #e0edf5;
+  --sf-color-link: #006cac;
+  --sf-color-border: #ece9e9;
+  --sf-color-highlight: #ff6b01;
+
+  /* Type — mono-flavored display over a quiet sans body (the seed's
+     code-flavored app font, approximated with system stacks) */
+  --sf-font-display: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sf-font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sf-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sf-measure: 48rem;
+
+  /* Space & shape — compact rhythm, near-square corners */
+  --sf-space-1: 0.25rem;
+  --sf-space-2: 0.5rem;
+  --sf-space-3: 1rem;
+  --sf-space-4: 1.5rem;
+  --sf-space-5: 2.5rem;
+  --sf-radius: 4px;
+  --sf-line: 1px solid var(--sf-color-border);
+
+  /* Graph */
+  --sf-graph-h: 30rem;
+  --sf-graph-card-w: 20rem;
+}

@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import { applyThemePreset } from '@moliver28/theme/config/preset';
 
 // GitHub Pages project site: served at /site-scratch-journalism/ — every internal URL must
 // respect the base path. The theme's graph island fetches `${import.meta.env.BASE_URL}graph.json`
@@ -9,4 +10,7 @@ export default defineConfig({
   // Evidence files, Sveltia admin, and uploads live in static/ (journalism
   // convention) — point Astro's public dir at it or nothing gets deployed.
   publicDir: 'static',
+  // Resolves `theme_preset` from site.config.yaml and aliases the theme's
+  // tokens import to that preset (unknown ids fail the build here).
+  vite: applyThemePreset().vite,
 });

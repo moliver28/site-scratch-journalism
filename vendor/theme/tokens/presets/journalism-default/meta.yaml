@@ -1,0 +1,21 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Journalism default
+description: >-
+  The factory's founding look: cool paper background, ink-navy text, teal
+  accent, serif display over sans body. Ship-safe for investigative and
+  newsroom sites (privacy-first: system fonts only).
+verticals:
+  - journalism
+attributes:
+  palette_type: light-paper
+  type_pairing: serif-display-sans-body
+  density: comfortable
+  mood: sober
+  motion: none
+source:
+  origin: sitefactory-original
+  license: MIT
+  attribution: >-
+    Original @moliver28/theme tokens (the look shipped in theme v0.1.0-v0.2.0);
+    no external seed.

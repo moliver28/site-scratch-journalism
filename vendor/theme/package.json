@@ -1,12 +1,32 @@
 {
   "name": "@moliver28/theme",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Auto-adapting Astro theme: design tokens, generic field renderers, block registry, entity graph island. Unknown data fields render with zero component code changes.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moliver28/sitefactory.git",
+    "directory": "packages/theme"
+  },
+  "files": [
+    "config",
+    "index.ts",
+    "blocks",
+    "graph",
+    "layouts",
+    "renderers",
+    "tokens"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "exports": {
     ".": "./index.ts",
-    "./tokens.css": "./tokens/tokens.css",
+    "./tokens.css": "./tokens/presets/journalism-default/tokens.css",
+    "./tokens/active.css": "./tokens/presets/journalism-default/tokens.css",
+    "./config/preset": "./config/preset.js",
+    "./config/match": "./config/match.js",
     "./graph/compiler": "./graph/compiler.ts",
     "./blocks/fields": "./blocks/fields.ts",
     "./blocks/registry": "./blocks/registry.ts",

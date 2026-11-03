@@ -2,6 +2,12 @@
 dist/
 .astro/
 
+# CI gate artifacts (Playwright + Lighthouse) and the LHCI staging copy
+test-results/
+playwright-report/
+.lighthouseci/
+serve/
+
 # dependencies
 node_modules/
 

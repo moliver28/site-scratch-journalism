@@ -1,0 +1,42 @@
+/*
+ * newsroom preset — newsprint paper, dense ink, one spot red, hairline rules.
+ * Values extracted from ondelva/astro-theme-masthead (MIT): palette, type,
+ * spacing and radius values only — no CSS, markup or code copied. Colors
+ * keep the seed's light-dark() pairs: the light values are the shipped
+ * look, and the dark values activate only where a site opts into a dark
+ * color-scheme (the factory declares none). Webfont names are referenced
+ * with system-only fallbacks; no font files ship.
+ */
+:root {
+  /* Color — warm newsprint, ink, single spot red */
+  --sf-color-bg: light-dark(#f7f5f0, #191713);
+  --sf-color-surface: light-dark(#efece5, #201e19);
+  --sf-color-ink: light-dark(#191713, #ede9e1);
+  --sf-color-muted: light-dark(#6a665e, #a19c92);
+  --sf-color-accent: light-dark(#c8102e, #f0596a);
+  --sf-color-accent-soft: light-dark(#ebbcc0, #4f2829);
+  --sf-color-link: light-dark(#c8102e, #f0596a);
+  --sf-color-border: light-dark(#d8d4cc, #3a362f);
+  --sf-color-highlight: #b07a00;
+
+  /* Type — serif display over Franklin-grotesque body (seed fallbacks).
+     The seed's third face, Libre Caslon Display, is its nameplate font
+     and has no factory slot — see meta.yaml. */
+  --sf-font-display: 'Source Serif 4', Georgia, serif;
+  --sf-font-body: 'Libre Franklin', Arial, sans-serif;
+  --sf-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --sf-measure: 65ch;
+
+  /* Space & shape — square corners; columns split by hairline rules */
+  --sf-space-1: 0.25rem;
+  --sf-space-2: 0.5rem;
+  --sf-space-3: 0.75rem;
+  --sf-space-4: 1.5rem;
+  --sf-space-5: 2.5rem;
+  --sf-radius: 0;
+  --sf-line: 1px solid var(--sf-color-border);
+
+  /* Graph */
+  --sf-graph-h: 30rem;
+  --sf-graph-card-w: 20rem;
+}

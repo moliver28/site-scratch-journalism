@@ -10,7 +10,9 @@ Layering: global `~/.zcode/AGENTS.md` → sitefactory factory `AGENTS.md` → th
    Public officials acting in public capacity are fair game with source cited.
 2. **Evidence or silence.** Every entity and edge should cite evidence paths
    under `static/evidence/` (or external URLs). Unverified claims carry
-   `confidence: low` and are labeled on render.
+   `confidence: low`. Confidence is stored and schema-validated today; on-page
+   visual labeling of low-confidence content is not implemented yet — it is a
+   contract for future render work (tracked upstream: moliver28/sitefactory#18).
 3. **Secure tips.** Tip-line submissions are raw input, never content. Redact,
    verify, and cite before anything becomes an entity, edge, or page.
 4. **No third-party scripts on reader-facing pages.** Zero trackers, zero
@@ -34,6 +36,11 @@ Layering: global `~/.zcode/AGENTS.md` → sitefactory factory `AGENTS.md` → th
   kind: any shape with `name` + `kind`; rendered by the generic list/detail
   routes at `/custom-entities/`. Promote to a first-class type via a template
   release PR when a kind stabilizes.
+  Two known gaps (tracked upstream: moliver28/sitefactory#19): entity-ref
+  fields always link to the `entities` route, so a ref pointing at a
+  custom-entity id renders `/entities/<id>/` (404); and custom-entities are
+  absent from `graph.json`. Reference custom-entities from page prose, not
+  entity-ref fields, until those land.
 
 ## Content schema (read before writing)
 

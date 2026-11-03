@@ -50,7 +50,9 @@ export interface FieldView {
 }
 
 const ISO_DATE = /^\d{4}-\d{2}(-\d{2})?([T ]\d{2}:\d{2}(:\d{2})?Z?)?$/;
-/** Year-only values are accepted as range endpoints (e.g. {from: 2015, to: 2024}), not as scalar dates. */
+/** String year-only values are accepted as range endpoints (e.g. {from: '2015', to: '2024'}),
+ *  not as scalar dates. Numeric years (unquoted in YAML) are NOT accepted — they render as
+ *  generic objects. */
 const YEAR_ONLY = /^\d{4}$/;
 
 function looksLikeDateValue(value: unknown): boolean {

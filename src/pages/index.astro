@@ -38,6 +38,12 @@ const pages = (await getCollection('pages')).sort((a, b) => a.data.order - b.dat
       ))
     }
   </ul>
+
+  <h2>Custom entities</h2>
+  <p>
+    Newly added kinds live under{' '}
+    <a href={`${import.meta.env.BASE_URL}custom-entities/`}>custom entities</a>.
+  </p>
 </BaseLayout>
 
 <style>

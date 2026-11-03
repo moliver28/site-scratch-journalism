@@ -1,0 +1,25 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Clinical calm
+description: >-
+  Cool off-white calm with a teal trust palette and soft 16px corners —
+  the clinical/healthcare look (the only free inspectable clinic seed).
+  Links use the seed's darker teal for contrast.
+verticals:
+  - clinic
+  - healthcare
+  - psychology
+attributes:
+  palette_type: light-cool
+  type_pairing: sans-display-sans-body
+  density: comfortable
+  mood: calm
+  motion: subtle
+source:
+  origin: https://github.com/web-stacked/healthcare-astro-theme
+  license: MIT
+  attribution: >-
+    Palette and card radius values pattern-mined from
+    web-stacked/healthcare-astro-theme (MIT). Values only — no CSS, markup
+    or code copied. Accent-soft is a 12% accent-over-white tint (own
+    computation); page background is the seed's surface-muted value.

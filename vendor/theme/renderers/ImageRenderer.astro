@@ -24,7 +24,9 @@ if (typeof field.value === 'string') {
   if (typeof v.caption === 'string') caption = v.caption;
 }
 
-const safeSrc = /^https?:\/\//i.test(src) || src.startsWith('/') ? src : '';
+// http(s) external or site-rooted internal paths only; protocol-relative
+// //host/x.png is rejected (same rule as LinkRenderer/EvidenceCite).
+const safeSrc = /^https?:\/\//i.test(src) || (src.startsWith('/') && !src.startsWith('//')) ? src : '';
 ---
 
 {

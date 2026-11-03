@@ -1,0 +1,38 @@
+/*
+ * trades-bold preset — dark navy ground, bold orange accent, chunky type.
+ * Values pattern-mined from formgong/craftline-astro-theme (MIT): palette
+ * and radius only — no CSS or markup copied. The seed's Urbanist
+ * variable webfont is referenced by name with system-only fallbacks; no
+ * font files ship.
+ */
+:root {
+  /* Color — deep navy ground, warm off-white type, bold orange accent */
+  --sf-color-bg: #0b0e1c;
+  --sf-color-surface: #121628;
+  --sf-color-ink: #f2f3f7;
+  --sf-color-muted: #a5abc0;
+  --sf-color-accent: #ff7a29;
+  --sf-color-accent-soft: #332428;
+  --sf-color-link: #ff7a29;
+  --sf-color-border: #262b42;
+  --sf-color-highlight: #4ade80;
+
+  /* Type — humanist-geometric sans everywhere (Urbanist by name) */
+  --sf-font-display: 'Urbanist', 'Century Gothic', 'Segoe UI', system-ui, sans-serif;
+  --sf-font-body: 'Urbanist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sf-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sf-measure: 72ch;
+
+  /* Space & shape — big scroll-story rhythm, gently rounded (10px) */
+  --sf-space-1: 0.25rem;
+  --sf-space-2: 0.5rem;
+  --sf-space-3: 1rem;
+  --sf-space-4: 2rem;
+  --sf-space-5: 4rem;
+  --sf-radius: 10px;
+  --sf-line: 1px solid var(--sf-color-border);
+
+  /* Graph */
+  --sf-graph-h: 30rem;
+  --sf-graph-card-w: 20rem;
+}

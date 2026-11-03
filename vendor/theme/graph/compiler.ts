@@ -126,7 +126,8 @@ function resolveColor(kind: string, overrides: Record<string, string> | undefine
 /**
  * Compile entity and edge collection entries into the static graph document.
  *
- * @throws CompileGraphError on duplicate entity ids or dangling edge references.
+ * @throws CompileGraphError on duplicate entity ids, duplicate edge ids, or dangling
+ * edge references.
  */
 export function compileGraph(
   entities: readonly RawEntity[],
@@ -164,7 +165,12 @@ export function compileGraph(
   }
 
   const dangling: string[] = [];
+  const edgeIds = new Set<string>();
   for (const edge of edges) {
+    if (edgeIds.has(edge.id)) {
+      throw new CompileGraphError(`Duplicate edge id "${edge.id}"`);
+    }
+    edgeIds.add(edge.id);
     const data = dataOf(edge);
     for (const [label, ref] of [['from', data.from], ['to', data.to]] as const) {
       if (typeof ref !== 'string' || !nodeIds.has(ref)) {

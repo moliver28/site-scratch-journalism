@@ -1,0 +1,26 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Editorial dark
+description: >-
+  Dark navy-black ground, near-white type, one lime accent doing all the
+  work — a type-led consultant/editorial look. Values pattern-mined from
+  the Orrery seed; the seed's geometric webfont is referenced by name with
+  system-only fallbacks (privacy-first: no font files ship).
+verticals:
+  - editorial
+  - consulting
+  - smb
+attributes:
+  palette_type: dark-navy
+  type_pairing: sans-display-sans-body
+  density: airy
+  mood: dramatic
+  motion: subtle
+source:
+  origin: https://github.com/formgong/orrery-astro-theme
+  license: MIT
+  attribution: >-
+    Palette and radius values pattern-mined from
+    formgong/orrery-astro-theme (MIT). Values only — no CSS, markup or code
+    copied. Accent-soft is a 16% accent-over-background tint computed from
+    the seed's own mixing recipe.

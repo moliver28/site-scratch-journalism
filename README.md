@@ -1,7 +1,7 @@
 # Scratch Journalism Site
 
 Investigative reporting site built with [sitefactory](https://github.com/moliver28/sitefactory)
-(journalism template v0.1.0, @moliver28/theme 0.2.0).
+(journalism template v0.1.0, @moliver28/theme 0.4.0).
 
 - Live: https://moliver28.github.io/site-scratch-journalism/
 - PR previews: `https://moliver28.github.io/site-scratch-journalism/pr-preview/pr-<n>/`

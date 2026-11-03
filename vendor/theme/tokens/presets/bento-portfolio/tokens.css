@@ -1,0 +1,40 @@
+/*
+ * bento-portfolio preset — mist ground, graphite ink, lime brand blocks,
+ * rounded bento cards. Values pattern-mined from
+ * Scintillaweb/swp-freelancer-portfolio (MIT): palette, radii and
+ * rhythm only — no CSS or markup copied. The seed's Space Grotesk /
+ * Inter Tight webfonts are referenced by name with system-only fallbacks;
+ * no font files ship.
+ */
+:root {
+  /* Color — warm mist ground, graphite ink, lime brand accent */
+  --sf-color-bg: #f2f3ef;
+  --sf-color-surface: #ffffff;
+  --sf-color-ink: #101110;
+  --sf-color-muted: #6c7068;
+  --sf-color-accent: #c8f14d;
+  --sf-color-accent-soft: #f4fcdb;
+  --sf-color-link: #2b2c2a;
+  --sf-color-border: #e3e5de;
+  --sf-color-highlight: #b2df33;
+
+  /* Type — grotesk display over tight sans body (name-first stacks) */
+  --sf-font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --sf-font-body: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sf-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sf-measure: 72ch;
+
+  /* Space & shape — bento rhythm (seed's 4.5rem tight-section max),
+     distinctly rounded 18px cards */
+  --sf-space-1: 0.25rem;
+  --sf-space-2: 0.5rem;
+  --sf-space-3: 1rem;
+  --sf-space-4: 1.5rem;
+  --sf-space-5: 4.5rem;
+  --sf-radius: 18px;
+  --sf-line: 1px solid var(--sf-color-border);
+
+  /* Graph */
+  --sf-graph-h: 30rem;
+  --sf-graph-card-w: 20rem;
+}

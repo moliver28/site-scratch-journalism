@@ -1,0 +1,25 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Agency vivid
+description: >-
+  Clean white marketing look with an electric-blue primary, violet accent
+  pop and soft-gray section alternation — the polished agency vibe of the
+  AstroWind seed (the best-scored all-round backbone in the seed set).
+verticals:
+  - agency
+  - marketing
+  - smb
+attributes:
+  palette_type: light-white
+  type_pairing: sans-display-sans-body
+  density: roomy
+  mood: energetic
+  motion: subtle
+source:
+  origin: https://github.com/arthelokyo/astrowind
+  license: MIT
+  attribution: >-
+    Palette and radius values pattern-mined from arthelokyo/astrowind (MIT).
+    Values only — no CSS, markup or code copied. Muted text, borders and
+    accent-soft are the seed's own documented color-mix recipes evaluated
+    against white (66% ink, 15% ink, 10% primary).

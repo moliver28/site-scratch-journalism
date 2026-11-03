@@ -34,13 +34,105 @@ jobs:
       - name: Build
         run: npm run build
 
+  quality:
+    name: axe + lighthouse + lychee
+    needs: gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # astro build runs Zod validation first — bad content fails fast here.
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Accessibility gate: tests/e2e/gates.spec.ts (axe serious/critical = 0;
+      # serves the built site via `npm run preview` at its base path).
+      - name: Axe scans (Playwright)
+        run: npm run test:e2e
+
+      # Emitted sites build at base /<repo>/ — LHCI's static server must see
+      # the parent of the site dir so absolute assets resolve (see
+      # scripts/lighthouserc.cjs).
+      - name: Stage dist at /<repo>/ for Lighthouse
+        run: mkdir -p serve && cp -r dist "serve/${{ github.event.repository.name }}"
+
+      - name: Lighthouse CI (budgets from site.config.yaml)
+        run: npx -y @lhci/cli@0.16.0 autorun --config=scripts/lighthouserc.cjs
+
+      # SSRF-safe link check: private, link-local, and loopback targets are
+      # excluded (--exclude-all-private is lychee's private+link-local+
+      # loopback bundle). Mail links are not checked: lychee only offers
+      # --include-mail (default off) — mailto: never leaves the machine.
+      # --root-dir maps absolute /<repo>/... links into serve/.
+      - name: Link check (Lychee, SSRF-safe)
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          lycheeVersion: v0.24.2
+          args: >-
+            --no-progress
+            --exclude-all-private
+            --exclude-loopback
+            --root-dir serve
+            'dist/**/*.html'
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lhci
+          path: .lighthouseci/
+          retention-days: 7
+          if-no-files-found: ignore
+          # .lighthouseci/ is a dotdir; upload-artifact v4.4+ skips hidden
+          # files unless told otherwise (found on the S2.9 scratch run —
+          # the first live exercise of this job: LHCI passed but the
+          # artifact step found no files).
+          include-hidden-files: true
+
   deploy:
     name: Deploy to GitHub Pages (main only)
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: gates
+    needs: [gates, quality]
     runs-on: ubuntu-latest
     permissions:
       contents: write # pushes the gh-pages branch
+    # Serialize every gh-pages write (deploy + previews) across workflow runs;
+    # never cancel a queued write (a cancelled preview leaves stale dirs).
+    concurrency:
+      group: gh-pages-writes
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
@@ -65,10 +157,15 @@ jobs:
   preview:
     name: PR preview
     if: github.event_name == 'pull_request'
+    needs: [gates, quality]
     runs-on: ubuntu-latest
     permissions:
       contents: write # pushes preview commits to gh-pages
       pull-requests: write # comments the preview URL on the PR
+    # Same serialization contract as deploy (issue #4: concurrent previews race).
+    concurrency:
+      group: gh-pages-writes
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 

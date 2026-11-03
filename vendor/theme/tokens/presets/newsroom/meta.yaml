@@ -1,0 +1,41 @@
+# Preset identity card for the theme catalog (ops/catalog/themes.yaml, P6.2).
+# The preset itself is tokens.css next to this file; catalog data lives here.
+title: Newsroom
+description: >-
+  The classic newspaper look: warm newsprint paper, dense ink type, one
+  spot red for section labels and lead-ins, square corners, columns split
+  by hairline rules. Serif display (Source Serif 4) over a Franklin
+  body (Libre Franklin). Colors keep the seed's light-dark() pairs, so a
+  site that opts into a dark color-scheme gets the seed's night edition;
+  the factory declares no color-scheme, so the default render is the
+  light paper look.
+verticals:
+  - journalism
+  - newsroom
+  - magazine
+attributes:
+  palette_type: light-paper
+  type_pairing: serif-display-sans-body
+  density: comfortable
+  mood: sober
+  motion: none
+source:
+  origin: https://github.com/ondelva/astro-theme-masthead
+  license: MIT
+  attribution: >-
+    Palette, type, spacing and radius values extracted from
+    ondelva/astro-theme-masthead "Masthead" (MIT; the repo's LICENSE file
+    has no extension, so GitHub's license API reports NOASSERTION — the
+    file text is verbatim MIT). Values only — no CSS, markup or code
+    copied. The seed's rule system (hair 1px, strong 1px over ink, heavy
+    3px, double 4px) collapses onto the factory's single --sf-line token;
+    only the hair rule ships. Accent-soft is the seed's own 25% brand
+    color-mix recipe evaluated in sRGB over the paper/ink ground; links
+    carry the seed's red link marking (it underlines ink body links in
+    red); the seed is silent on a highlight tone, so the factory default
+    is kept; the measure is the seed's 40rem article width, documented
+    in-seed as about 65ch of serif text. The seed's Libre Caslon Display
+    nameplate at clamp(2.75rem, 11vw, 8.5rem) has no factory token slot
+    and ships in prose only. Newspaper alternates assessed in the same
+    research wave, kept as references: Halftone (photo-newsmagazine) and
+    Gazette (issue-magazine), both ondelva, MIT (ops/theme-seeds.yaml).

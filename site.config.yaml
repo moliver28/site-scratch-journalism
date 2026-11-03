@@ -15,12 +15,27 @@ template:
 
 theme:
   name: "@moliver28/theme"
-  version: 0.4.0
+  version: 0.5.0
   distribution: vendored
   path: vendor/theme
 
 graph:
   height: 32rem
+
+# CI quality budgets: Lighthouse category minimums (enforced by
+# scripts/lighthouserc.cjs in the site's CI quality job). Raise with care —
+# a category below its budget fails CI. Performance is 0.70, not 0.90: the
+# graph page's sigma.js force layout costs ~1.7s of main-thread blocking
+# under Lighthouse's mobile CPU throttling, which caps its performance
+# score at ~0.72-0.77 (measured on template default content). Raise it if
+# the island gets lazier, lower it per-site for heavier graphs.
+performance:
+  lighthouse:
+    categories:
+      performance: 0.70
+      accessibility: 0.95
+      best-practices: 0.90
+      seo: 0.90
 
 deploy:
   target: github-pages

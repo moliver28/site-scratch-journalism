@@ -1,0 +1,102 @@
+name: Post-publish link monitor
+
+# P9 UX F10: weekly health check of the DEPLOYED site. This is NOT the
+# PR-time linkcheck (ci.yml quality job) — that gates the build; this
+# watches production, where links rot independently of the repo.
+# GitHub disables scheduled workflows on repos with no activity for 60
+# days (it emails the owner); any push resets that clock.
+on:
+  schedule:
+    # Mondays 13:00 UTC — business hours in Europe, off-peak morning in
+    # the US; a broken-links issue lands while editors are around.
+    - cron: '0 13 * * 1'
+  workflow_dispatch: # manual re-run after fixing reported links
+
+permissions:
+  contents: read # checkout + npm ci
+  issues: write # open/comment the broken-links issue on failure
+
+jobs:
+  monitor:
+    name: lychee over the deployed sitemap
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # Toolchain only: the composer needs node + `yaml` (Astro's tree via
+      # the vendored theme — same shape as the ci.yml linkcheck step).
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compose lychee args from site.config.yaml
+        id: monitor-args
+        # `|| exit 1` matters (same reason as ci.yml): `echo "args=$(cmd)"`
+        # masks the composer's exit status — a bad config must fail THIS
+        # step loudly, not surface later as an empty-args input error.
+        run: |
+          args=$(node scripts/monitor-args.cjs) || exit 1
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+
+      # Input is the deployed sitemap-0.xml — lychee extracts and checks
+      # every URL it lists (no crawler). SSRF-safe: --exclude-all-private
+      # is lychee's private + link-local + loopback bundle, and it is
+      # never configurable (composer-owned, like ci.yml's linkcheck).
+      - name: Link check (Lychee, SSRF-safe, production)
+        id: lychee
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          lycheeVersion: v0.24.2
+          args: ${{ steps.monitor-args.outputs.args }}
+          output: /tmp/lychee-report.md
+
+      - name: Upload full lychee report
+        # Report handling gates on the lychee OUTCOME, not bare failure():
+        # infra failures (npm ci, the composer) surface as the run's own
+        # failure — a "broken links" issue with no lychee report would be
+        # noise (momus P1 rider on PR #95).
+        if: failure() && steps.lychee.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report
+          path: /tmp/lychee-report.md
+          retention-days: 7 # same retention as the ci.yml job artifacts
+          if-no-files-found: ignore
+
+      - name: Open or update the broken-links issue
+        # Same outcome gate as the artifact step: a composer/npm-ci failure
+        # must not open a "broken links" issue it cannot fill (the old bare
+        # `if: failure()` hard-read the report file and died before creating
+        # anything — silently no issue ever). The report read is tolerant:
+        # a lychee crash can leave no file behind, and the issue must still
+        # open with what is known.
+        if: failure() && steps.lychee.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          run_date=$(date -u +%F)
+          title="[monitor] broken links $run_date"
+          {
+            echo "Weekly post-publish link check (lychee) failed against the deployed site."
+            echo
+            echo "- Full report: the \`lychee-report\` artifact of [this run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) (7-day retention)"
+            echo
+            echo "### Report (first 100 lines)"
+            echo
+            echo '````'
+            head -100 /tmp/lychee-report.md 2>/dev/null || echo "(lychee produced no report file)"
+            echo '````'
+          } > issue-body.md
+          # Same-date re-runs (workflow_dispatch) update the existing issue
+          # instead of opening duplicates.
+          existing=$(gh issue list --state open --search "[monitor] broken links $run_date in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file issue-body.md
+          else
+            gh issue create --title "$title" --body-file issue-body.md
+          fi

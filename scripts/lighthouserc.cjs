@@ -7,23 +7,32 @@
  * out-of-range values fail loudly: a budget that silently doesn't bind is
  * worse than a failed run.
  *
+ * Audited pages are a deterministic stratified sample computed from a
+ * plain-fs walk of the staged dist (scripts/lighthouse-sampler.cjs, issue
+ * #52): home + graph island always, two entities, one page per
+ * kind/case-cluster, hard cap 10 URLs x 3 runs. This replaces LHCI's
+ * audit-every-page autodiscovery mode (measured 30+ min on a 173-page
+ * dist, which no quality job can fit) — the autodiscovery knobs
+ * (discovery depth/limits/blocklist) are retired with it; the contract
+ * test pins their absence. `/admin/` exclusion is now structural: the
+ * sampler never picks the staff-only CMS shell.
+ *
  * `yaml` is re-used from Astro's dependency tree — the same zero-new-deps
  * pattern as `vendor/theme/config/preset.js`. Shipped as .cjs because
  * `astro check` skips CommonJS files.
  *
  * Serving contract (see the CI "Stage dist" step): emitted sites build at
- * base `/<repo>/`, so LHCI's built-in static server must serve the PARENT of
- * the site directory. CI stages `dist` at `serve/<repo>/`; this config
- * points `staticDistDir` at `serve/` and autodiscovery audits
- * http://localhost:<port>/<repo>/<page>.html with every absolute asset
- * resolving. Discovery needs explicit depth/limits: LHCI defaults cap at
- * 5 URLs and 2 folder levels, which misses entity and page routes.
- * `/admin/` is the staff-only CMS shell (noindex, pinned third-party
- * script) — not a content page, so it is excluded from the audit.
+ * base `/<repo>/`, so LHCI's built-in static server must serve the PARENT
+ * of the site directory. CI stages `dist` at `serve/<repo>/`; this config
+ * points `staticDistDir` at `serve/`, resolves the single staged site dir,
+ * and passes explicit `http://localhost/<repo>/<page>.html` URLs — LHCI
+ * swaps in its ephemeral server port (docs: collect.url with
+ * staticDistDir).
  */
-const { existsSync, readFileSync } = require('node:fs');
+const { existsSync, readdirSync, readFileSync, statSync } = require('node:fs');
 const path = require('node:path');
 const { parse: parseYaml } = require('yaml');
+const { sampleServedPages, toPageUrls } = require('./lighthouse-sampler.cjs');
 
 const DEFAULT_BUDGETS = {
   performance: 0.9,
@@ -77,18 +86,40 @@ for (const [category, minScore] of Object.entries(budgets)) {
 }
 
 // deploy.base mirrors astro.config's base ("/<repo>/"); "/" covers rooted
-// sites. LHCI blocklist entries are exact-URL matched (after port
-// normalization), so name the file URL autodiscovery actually produces.
+// sites. The sampled page paths are joined onto the base — never treated
+// as path-absolute — so each audited URL is serve/<repo>/<page> mapped to
+// http://localhost/<repo>/<page> (LHCI replaces the port).
+const serveDir = path.join(siteRoot, 'serve');
+let staged;
+try {
+  staged = readdirSync(serveDir, { withFileTypes: true }).filter(
+    (entry) => entry.isDirectory() && !entry.name.startsWith('.'),
+  );
+} catch {
+  // Friendly failure (mirrors lighthouse-sampler.cjs): a raw ENOENT stack
+  // here means `lhci autorun` ran before the CI staging step existed.
+  throw new Error(
+    `lighthouserc: no staged site dir at ${serveDir} — run the CI staging step (dist → serve/<repo>/) before lhci autorun`,
+  );
+}
+if (staged.length !== 1) {
+  throw new Error(
+    `lighthouserc: expected exactly one staged site dir under serve/ (CI stages dist at serve/<repo>/), found ${staged.length}`,
+  );
+}
+const siteDir = path.join(serveDir, staged[0].name);
+if (!statSync(siteDir).isDirectory()) {
+  throw new Error(`lighthouserc: staged site dir is not a directory: ${siteDir}`);
+}
 const base = loadSiteConfig(siteRoot)?.deploy?.base ?? '/';
-const adminBlocklist = new URL(path.posix.join(String(base), 'admin/index.html'), 'http://localhost').href;
+const pageUrls = toPageUrls(sampleServedPages(siteDir), base);
 
 module.exports = {
   ci: {
     collect: {
-      staticDistDir: path.join(siteRoot, 'serve'),
-      maxAutodiscoverUrls: 0, // audit every discovered page, not just the first 5
-      staticDirFileDiscoveryDepth: 5, // default 2 misses entities/<id>/ and deeper routes
-      autodiscoverUrlBlocklist: [adminBlocklist],
+      staticDistDir: serveDir,
+      url: pageUrls, // explicit URLs retire autodiscovery (issue #52)
+      numberOfRuns: 3,
     },
     assert: {
       assertions,

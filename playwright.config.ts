@@ -3,7 +3,8 @@ import { defineConfig } from '@playwright/test';
 /**
  * Accessibility gate runner (tests/e2e/gates.spec.ts).
  * The webServer serves the BUILT site at its GitHub Pages base path — run
- * `npm run build` first (CI's quality job always does).
+ * `npm run build` first (CI: gates builds and uploads the artifact, quality
+ * downloads it — issue sitefactory#21; locally there is no artifact, so build).
  */
 export default defineConfig({
   testDir: 'tests/e2e',

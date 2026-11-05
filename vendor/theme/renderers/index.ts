@@ -13,6 +13,7 @@ import LinkRenderer from './LinkRenderer.astro';
 import DateRange from './DateRange.astro';
 import EntityRef from './EntityRef.astro';
 import EvidenceCite from './EvidenceCite.astro';
+import ConfidenceBadge from './ConfidenceBadge.astro';
 import ListRenderer from './ListRenderer.astro';
 import TableRenderer from './TableRenderer.astro';
 import ObjectFallback from './ObjectFallback.astro';
@@ -26,6 +27,7 @@ export const fieldRenderers = {
   daterange: DateRange,
   entityref: EntityRef,
   evidence: EvidenceCite,
+  confidence: ConfidenceBadge,
   string: Scalar,
   number: Scalar,
   boolean: Scalar,

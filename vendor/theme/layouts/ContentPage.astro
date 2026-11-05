@@ -19,6 +19,9 @@ const { title, description, siteName, kicker, block, skip } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description} siteName={siteName}>
+  {/* Forward the head-extra slot so profile pages can inject head tags
+      (e.g. discovery meta) without knowing the layout internals. */}
+  <Fragment slot="head-extra"><slot name="head-extra" /></Fragment>
   <article class="sf-content-page">
     {kicker && <p class="sf-kicker">{kicker}</p>}
     <h1>{title}</h1>

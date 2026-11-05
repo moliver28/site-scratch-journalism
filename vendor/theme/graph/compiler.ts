@@ -1,9 +1,15 @@
 /**
- * Graph compiler: entities + edges collections → static GraphJSON.
+ * Graph compiler: entities + custom-entities + edges collections → static
+ * GraphJSON.
  *
  * Runs at build time inside the site's `graph.json` endpoint, so the sigma.js
  * island fetches a fully-resolved static file (no client-side YAML, no
  * hydration mismatch). The same entities/edges drive the non-graph views.
+ *
+ * Custom-entities (sitefactory#19) compile with the same node shape as
+ * entities; their kind comes from the `kind` field (or a `type` field) and
+ * their conventional href targets the /custom-entities/<id>/ route. Edges may
+ * reference either collection.
  *
  * Fails fast on dangling edge references — a broken reference is a data bug,
  * not something the UI should paper over.
@@ -63,6 +69,14 @@ export interface CompileOptions {
    * Project sites hosted under /<repo>/ must pass it or links 404.
    */
   base?: string;
+  /**
+   * Entries of the `custom-entities` collection (sitefactory#19). Compiled
+   * with the same node shape as entities but routed to
+   * /custom-entities/<id>/; their kind comes from the `type` or `kind`
+   * field. Edges may reference custom-entities too. Optional so existing
+   * entity-only callers compile to byte-identical output.
+   */
+  customEntities?: readonly RawEntity[];
 }
 
 /** Data fields that describe the node itself and are never repeated in the card. */
@@ -98,11 +112,11 @@ function kindOf(data: Record<string, unknown>): string {
   return typeof kind === 'string' && kind.trim() !== '' ? kind : 'entity';
 }
 
-function hrefOf(id: string, data: Record<string, unknown>, base: string): string {
+function hrefOf(id: string, data: Record<string, unknown>, base: string, collection: string): string {
   const url = data.url;
   if (typeof url === 'string' && url.trim() !== '') return url;
   const prefix = base.endsWith('/') ? base : `${base}/`;
-  return `${prefix}entities/${id}/`;
+  return `${prefix}${collection}/${id}/`;
 }
 
 function weightOf(data: Record<string, unknown>): number {
@@ -124,10 +138,11 @@ function resolveColor(kind: string, overrides: Record<string, string> | undefine
 }
 
 /**
- * Compile entity and edge collection entries into the static graph document.
+ * Compile entity, custom-entity, and edge collection entries into the static
+ * graph document.
  *
- * @throws CompileGraphError on duplicate entity ids, duplicate edge ids, or dangling
- * edge references.
+ * @throws CompileGraphError on duplicate entity or custom-entity ids, duplicate
+ * edge ids, or dangling edge references.
  */
 export function compileGraph(
   entities: readonly RawEntity[],
@@ -139,30 +154,36 @@ export function compileGraph(
   const nodeIds = new Set<string>();
   const kindCounts = new Map<string, number>();
 
-  for (const entity of entities) {
-    if (nodeIds.has(entity.id)) {
-      throw new CompileGraphError(`Duplicate entity id "${entity.id}"`);
-    }
-    nodeIds.add(entity.id);
-    const data = dataOf(entity);
-    const kind = kindOf(data);
-    kindCounts.set(kind, (kindCounts.get(kind) ?? 0) + 1);
+  // One node shape for both collections; only the route segment differs.
+  // Entities compile first so JSON output for entity-only sites is unchanged.
+  const addNodes = (collectionEntries: readonly RawEntity[], route: string, idLabel: string): void => {
+    for (const entry of collectionEntries) {
+      if (nodeIds.has(entry.id)) {
+        throw new CompileGraphError(`Duplicate ${idLabel} id "${entry.id}"`);
+      }
+      nodeIds.add(entry.id);
+      const data = dataOf(entry);
+      const kind = kindOf(data);
+      kindCounts.set(kind, (kindCounts.get(kind) ?? 0) + 1);
 
-    const fields: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (!DISPLAY_INTERNAL_FIELDS.has(key)) fields[key] = value;
-    }
+      const fields: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (!DISPLAY_INTERNAL_FIELDS.has(key)) fields[key] = value;
+      }
 
-    nodes.push({
-      id: entity.id,
-      label: labelOf(entity.id, data),
-      kind,
-      color: resolveColor(kind, options.palette),
-      size: 5,
-      href: hrefOf(entity.id, data, base),
-      fields,
-    });
-  }
+      nodes.push({
+        id: entry.id,
+        label: labelOf(entry.id, data),
+        kind,
+        color: resolveColor(kind, options.palette),
+        size: 5,
+        href: hrefOf(entry.id, data, base, route),
+        fields,
+      });
+    }
+  };
+  addNodes(entities, 'entities', 'entity');
+  addNodes(options.customEntities ?? [], 'custom-entities', 'custom-entity');
 
   const dangling: string[] = [];
   const edgeIds = new Set<string>();

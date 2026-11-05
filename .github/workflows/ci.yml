@@ -4,17 +4,31 @@ on:
   push:
     branches: [main]
   pull_request:
+    # `closed` is required for preview cleanup (issue sitefactory#48):
+    # pr-preview-action's action:auto can only remove the preview on an
+    # event type the workflow actually receives.
+    types: [opened, synchronize, reopened, closed]
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages-${{ github.ref }}
+  # Event-aware group (sitefactory#66, seen live twice): a merged PR's
+  # closed event resolves github.ref to the BASE branch, so a ref-only
+  # group makes the (all-jobs-skipped) closed-event run land in the SAME
+  # group as the main push run — and with cancel-in-progress, the closed
+  # run CANCELS the push run's gates/quality/deploy. PR-scoped groups for
+  # pull_request events, ref groups otherwise: the two never collide.
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.number) || format('pages-{0}', github.ref) }}
   cancel-in-progress: true
 
 jobs:
   gates:
     name: validate + typecheck + build
+    # Closed PRs only run preview-cleanup (issue sitefactory#48) — no
+    # build, no gates. On push events `github.event.action` is unset, so
+    # the != 'closed' comparison is true.
+    if: github.event_name == 'push' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,11 +48,30 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Issue sitefactory#21: deploy/preview/quality consume THIS build via
+      # artifact — gates is the only build, so "green gates = exactly what
+      # ships" (no second, potentially divergent build).
+      - name: Upload build artifact for deploy/preview/quality
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist
+          path: dist
+          retention-days: 1
+          if-no-files-found: error
+          # dist is build output (may contain static/ dotfiles like
+          # .well-known/); upload-artifact v4.4+ skips hidden files unless
+          # told otherwise — same lesson as the .lighthouseci/ upload below.
+          include-hidden-files: true
+
   quality:
     name: axe + lighthouse + lychee
+    if: github.event_name == 'push' || github.event.action != 'closed'
     needs: gates
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # sitefactory#52: the Lighthouse sample is capped (10 URLs x 3 runs),
+    # but the full job also runs axe scans, LHCI warmup and lychee; the old
+    # 25-minute ceiling left no headroom for slow runners on large dists.
+    timeout-minutes: 45
     permissions:
       contents: read
     steps:
@@ -49,12 +82,16 @@ jobs:
           node-version: 24
           cache: npm
 
+      # Toolchain only (Playwright/LHCI configs live in the repo); the site
+      # itself comes from the gates artifact (issue sitefactory#21).
       - name: Install dependencies
         run: npm ci
 
-      # astro build runs Zod validation first — bad content fails fast here.
-      - name: Build
-        run: npm run build
+      - name: Download gates build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site-dist
+          path: dist
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
@@ -73,6 +110,23 @@ jobs:
       - name: Lighthouse CI (budgets from site.config.yaml)
         run: npx -y @lhci/cli@0.16.0 autorun --config=scripts/lighthouserc.cjs
 
+      # Flakiness policy (issue sitefactory#53): clients may opt bot-blocked
+      # external domains out and override lychee's --accept status set via
+      # the optional `linkcheck:` block in site.config.yaml — client-editable,
+      # declarative, auditable in the PR diff. The composer emits today's
+      # exact invocation when the block is absent (--accept REPLACES
+      # lychee's default accept set, so it must never appear by default).
+      # Internal links stay strict ALWAYS: --root-dir serve and the dist
+      # glob are not configurable, and --exclude only matches domains.
+      - name: Compose lychee args from site.config.yaml
+        id: linkcheck-args
+        # `|| exit 1` matters: `echo "args=$(cmd)"` masks the composer's
+        # exit status — a bad linkcheck block must fail THIS step loudly,
+        # not surface later as a confusing empty-args lychee input error.
+        run: |
+          args=$(node scripts/linkcheck-args.cjs) || exit 1
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+
       # SSRF-safe link check: private, link-local, and loopback targets are
       # excluded (--exclude-all-private is lychee's private+link-local+
       # loopback bundle). Mail links are not checked: lychee only offers
@@ -82,12 +136,7 @@ jobs:
         uses: lycheeverse/lychee-action@v2.9.0
         with:
           lycheeVersion: v0.24.2
-          args: >-
-            --no-progress
-            --exclude-all-private
-            --exclude-loopback
-            --root-dir serve
-            'dist/**/*.html'
+          args: ${{ steps.linkcheck-args.outputs.args }}
 
       - name: Upload Playwright report
         if: always()
@@ -134,18 +183,14 @@ jobs:
       group: gh-pages-writes
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      # No checkout: peaceiris/actions-gh-pages runs its own git machinery
+      # against the gh-pages branch and needs only the publish dir.
+      # Issue sitefactory#21: ship the build gates already validated.
+      - name: Download gates build artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+          name: site-dist
+          path: dist
 
       - uses: peaceiris/actions-gh-pages@v4
         with:
@@ -156,7 +201,9 @@ jobs:
 
   preview:
     name: PR preview
-    if: github.event_name == 'pull_request'
+    # Deploy/refresh on open/sync/reopen only; removal is preview-cleanup's
+    # job (issue sitefactory#48) — the closed event must not rebuild.
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
     needs: [gates, quality]
     runs-on: ubuntu-latest
     permissions:
@@ -168,17 +215,20 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        # Kept despite the artifact: pr-preview-action's usage docs state the
+        # workflow checks out the repository before running the action, and
+        # checkout costs seconds vs the minutes the dropped install+build
+        # saved (issue sitefactory#21).
 
-      - uses: actions/setup-node@v4
+      # Issue sitefactory#21: preview exactly what gates validated.
+      # pr-preview-action delegates to JamesIves/github-pages-deploy-action,
+      # which ships any workspace folder to the preview branch — a downloaded
+      # artifact dir qualifies.
+      - name: Download gates build artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+          name: site-dist
+          path: dist
 
       - name: Publish preview to /pr-preview/pr-<n>/
         uses: rossjrw/pr-preview-action@v1
@@ -187,3 +237,38 @@ jobs:
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto
+
+  preview-cleanup:
+    name: PR preview cleanup (on close)
+    # Issue sitefactory#48: pr-preview-action's action:auto never saw the
+    # closed event (the pull_request trigger lacked the `closed` type), so
+    # stale pr-preview/pr-<n>/ dirs accumulated on gh-pages forever. This
+    # lightweight job runs ONLY on close-UNMERGED: merged PRs don't need
+    # cleanup (deploy's keep_files preserves pr-preview/), and letting this
+    # run on a merge fires a useless workflow alongside the main push run —
+    # that race CANCELLED the main deploy on its first production fire
+    # (sitefactory#66). GITHUB_TOKEN with contents: write suffices for the
+    # gh-pages removal (same-repo PRs only today — fork PRs would need a
+    # PAT, matching the preview job's constraint); pull-requests: write is
+    # required by the action's sticky preview-URL comment.
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged != true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # removes the preview commit from gh-pages
+      pull-requests: write # preview-URL comment by the action
+    # Same serialization contract as deploy/preview: never race a gh-pages
+    # write, never cancel one in flight.
+    concurrency:
+      group: gh-pages-writes
+      cancel-in-progress: false
+    steps:
+      # pr-preview-action's usage contract: check out the repository before
+      # the action runs (it drives git against the workspace).
+      - uses: actions/checkout@v4
+
+      - name: Remove pr-preview/pr-<n>/ from gh-pages
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: remove

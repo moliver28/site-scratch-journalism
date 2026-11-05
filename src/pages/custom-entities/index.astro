@@ -6,6 +6,7 @@
  */
 import { getCollection } from 'astro:content';
 import BaseLayout from '@moliver28/theme/layouts/BaseLayout.astro';
+import DiscoveryHead from '../../components/DiscoveryHead.astro';
 
 const items = (await getCollection('customEntities')).sort((a, b) =>
   String(a.data.name ?? a.id).localeCompare(String(b.data.name ?? b.id)),
@@ -18,6 +19,14 @@ const kinds = [...new Set(items.map((i) => String(i.data.kind ?? 'custom')))];
   description="Newly added entity kinds, rendered generically."
   siteName="Scratch Journalism Site"
 >
+  <Fragment slot="head-extra">
+    <DiscoveryHead
+      type="website"
+      title="Custom entities"
+      description="Newly added entity kinds, rendered generically."
+      path="custom-entities/"
+    />
+  </Fragment>
   <h1>Custom entities</h1>
   <p>Kinds present: {kinds.join(', ') || 'none yet'}. Add a YAML file to <code>src/content/custom-entities/</code> and rebuild — this page renders it automatically.</p>
   <ul>

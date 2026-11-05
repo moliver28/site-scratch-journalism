@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '@moliver28/theme/layouts/BaseLayout.astro';
+import DiscoveryHead from '../components/DiscoveryHead.astro';
 
 const entities = (await getCollection('entities')).sort((a, b) =>
   String(a.data.name ?? a.id).localeCompare(String(b.data.name ?? b.id)),
@@ -9,6 +10,9 @@ const pages = (await getCollection('pages')).sort((a, b) => a.data.order - b.dat
 ---
 
 <BaseLayout title="Scratch Journalism Site" description="Deploy smoke for the sitefactory journalism template." siteName="Scratch Journalism Site">
+  <Fragment slot="head-extra">
+    <DiscoveryHead type="website" title="Scratch Journalism Site" description="Deploy smoke for the sitefactory journalism template." path="" />
+  </Fragment>
   <h1>Scratch Journalism Site</h1>
   <p>
     Investigations, entities, and the connections between them — the

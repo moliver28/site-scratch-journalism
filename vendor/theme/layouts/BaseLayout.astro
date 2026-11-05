@@ -13,6 +13,10 @@ interface Props {
 }
 const { title, description, siteName = 'sitefactory' } = Astro.props;
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+// Issue #14: the brand link must respect the deployment base path —
+// project-pages sites serve at /<repo>/, where a hardcoded "/" bounces to
+// the host root. Same BASE_URL normalization idiom as the theme renderers.
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <!doctype html>
@@ -23,11 +27,14 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
     {description && <meta name="description" content={description} />}
     <meta name="generator" content={Astro.generator} />
     <title>{fullTitle}</title>
+    {/* Extension point for site-level head tags (reader-discovery meta:
+        Open Graph/Twitter cards, JSON-LD). Emits nothing by default. */}
+    <slot name="head-extra" />
   </head>
   <body>
     <a class="sf-skip-link" href="#sf-main">Skip to content</a>
     <header class="sf-site-header">
-      <a class="sf-site-home" href="/">{siteName}</a>
+      <a class="sf-site-home" href={base}>{siteName}</a>
       <slot name="site-nav" />
     </header>
     <main id="sf-main" class="sf-main">
@@ -100,6 +107,19 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
     border: var(--sf-line);
     border-radius: var(--sf-radius);
     padding: 0.1em 0.35em;
+  }
+
+  /* Shiki (Astro's default highlighter) inline-styles each `pre` with a
+     dark theme background and light token colors. This scoped reset stops
+     the generic `code` surface background from painting a light strip
+     behind those tokens — a WCAG contrast failure on every markdown code
+     block (axe serious; found by the investigations 0.5.0 drill). */
+  pre code,
+  pre code[class*='language-'] {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
   }
 
   .sf-site-header {

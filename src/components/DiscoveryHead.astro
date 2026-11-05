@@ -1,0 +1,104 @@
+---
+/**
+ * Reader-discovery head tags (P9 UX F3): Open Graph + Twitter cards on
+ * every wired page, JSON-LD on article pages (`Article`) and the home
+ * page (plain `WebSite` — no `SearchAction`: the site has no search).
+ *
+ * Gated by the optional `discovery:` block in site.config.yaml via
+ * src/lib/discovery.ts — defaults are ALL ON; set a key to false there to
+ * drop these tags from every page.
+ *
+ * og:image is intentionally omitted: the template ships no social image
+ * asset and none is invented for it. A site that wants social cards with
+ * a preview image adds `static/social-card.(png|jpg)` plus an og:image
+ * tag here; until then Twitter falls back to a plain `summary` card.
+ *
+ * `path` is the base-relative route ('' on home, `pages/<id>/` on
+ * articles) — the same id-derived shape pages use for internal links, so
+ * og:url stays consistent with hrefs: a base-aware absolute URL built
+ * from BASE_URL + SITE (never Astro.url, whose pathname shape is not a
+ * contract across build.format/trailingSlash combinations).
+ */
+import { resolveDiscovery } from '../lib/discovery';
+
+interface Props {
+  type: 'website' | 'article';
+  title: string;
+  description?: string;
+  /** Base-relative route: '' on the home page, `pages/<id>/` on articles. */
+  path: string;
+  /** Publish date (pages frontmatter `date:`); omitted on undated pages. */
+  date?: unknown;
+}
+
+const { type, title, description, path, date } = Astro.props;
+const siteName = 'Scratch Journalism Site';
+const siteDescription = 'Deploy smoke for the sitefactory journalism template.';
+const author = 'sitefactory';
+
+const discovery = resolveDiscovery();
+const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+const canonical = new URL(`${import.meta.env.BASE_URL}${path}`, import.meta.env.SITE);
+const ogDescription = description ?? siteDescription;
+
+const published =
+  date !== undefined && date !== null && !Number.isNaN(new Date(date as string | Date).getTime())
+    ? new Date(date as string | Date)
+    : undefined;
+
+const articleJsonld =
+  type === 'article'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: fullTitle,
+        // datePublished/author appear only when the data exists: pages
+        // carry `date:` only if the site added it (schema has no date
+        // field by default) and the copier `author` question may be ''.
+        ...(published ? { datePublished: published.toISOString() } : {}),
+        ...(author ? { author: { '@type': 'Person', name: author } } : {}),
+        mainEntityOfPage: canonical.href,
+      }
+    : undefined;
+
+// WebSite on the home page ONLY (task contract); other website-type pages
+// (graph, entity lists) get cards but no JSON-LD.
+const homeJsonld =
+  type === 'website' && path === ''
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: siteName,
+        url: canonical.href,
+      }
+    : undefined;
+
+const jsonld = discovery.jsonld ? (articleJsonld ?? homeJsonld) : undefined;
+---
+
+{
+  discovery.opengraph && (
+    <>
+      <meta property="og:site_name" content={siteName} />
+      <meta property="og:type" content={type} />
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={ogDescription} />
+      <meta property="og:url" content={canonical.href} />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={fullTitle} />
+      <meta name="twitter:description" content={ogDescription} />
+    </>
+  )
+}
+{
+  jsonld && (
+    <script
+      type="application/ld+json"
+      // A raw `</script>` inside the payload (reachable: title/site_name/
+      // author are CMS-editable) would terminate the element and corrupt
+      // the head. Escaping every `<` as \u003c keeps the HTML inert while
+      // staying byte-identical under JSON.parse.
+      set:html={JSON.stringify(jsonld).replace(/</g, '\\u003c')}
+    />
+  )
+}

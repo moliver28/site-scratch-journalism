@@ -5,7 +5,10 @@
  * (built by the theme's graph compiler), so there is no hydration mismatch
  * and no third-party request.
  *
- * Interactions: click node → entity card, kind filters, list-view toggle.
+ * Interactions: click node → entity card, kind filters, list-view toggle,
+ * edge hover → tooltip (low-confidence edges carry an "Unverified" badge,
+ * sitefactory#18; the list view badges entities with low-confidence edges,
+ * which is the accessible surface for that signal).
  * All dynamic text is written via textContent (no HTML injection surface).
  */
 interface Props {
@@ -218,6 +221,43 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     color: var(--sf-color-muted);
     padding: 1.5rem;
   }
+
+  [data-sf-graph] .sf-graph-edge-tip {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    box-shadow: 0 2px 8px rgba(21, 36, 48, 0.12);
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    color: var(--sf-color-ink);
+  }
+
+  [data-sf-graph] .sf-graph-edge-tip[hidden] {
+    display: none;
+  }
+
+  /* Low-confidence badge (sitefactory#18): used in edge tooltips and the
+     list view. Token-driven so every preset renders it on-palette. */
+  [data-sf-graph] .sf-confidence-chip {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    padding: 0 0.4em;
+    background: var(--sf-color-accent-soft);
+    color: var(--sf-color-ink);
+  }
+
+  [data-sf-graph] .sf-graph-list .sf-confidence-chip {
+    margin-left: auto;
+  }
 </style>
 
 <script>
@@ -362,6 +402,42 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     // Sizes in position units, proportional to layout extent (zoom-stable).
     applyLayoutScaledSizes(graph);
 
+    // Low-confidence edges (sitefactory#18): hovering an edge shows a tooltip
+    // whose kind/evidence lines gain an "Unverified" badge when the edge is
+    // confidence: low. Entities with >=1 incident low-confidence edge carry
+    // the badge in the list view below (canvas content is not accessible —
+    // the list is the accessible surface for this signal).
+    const edgeById = new Map(doc.edges.map((edge) => [edge.id, edge]));
+    const incidentLowConfidence = new Map<string, number>();
+    for (const edge of doc.edges) {
+      if (edge.confidence !== 'low') continue;
+      incidentLowConfidence.set(edge.source, (incidentLowConfidence.get(edge.source) ?? 0) + 1);
+      incidentLowConfidence.set(edge.target, (incidentLowConfidence.get(edge.target) ?? 0) + 1);
+    }
+    const tip = el('div', 'sf-graph-edge-tip');
+    tip.setAttribute('aria-hidden', 'true');
+    tip.hidden = true;
+    stage.append(tip);
+    const showTip = (edgeKey: string, x: number, y: number): void => {
+      const edge = edgeById.get(edgeKey);
+      if (!edge) return;
+      tip.replaceChildren();
+      const kindLine = el('strong');
+      kindLine.textContent = edge.kind;
+      const metaLine = el('span');
+      metaLine.textContent = `${edge.evidence.length} evidence`;
+      tip.append(kindLine, metaLine);
+      if (edge.confidence === 'low') {
+        const badge = el('span', 'sf-confidence-chip');
+        badge.setAttribute('data-confidence', 'low');
+        badge.textContent = 'Unverified';
+        tip.append(badge);
+      }
+      tip.style.left = `${x}px`;
+      tip.style.top = `${y}px`;
+      tip.hidden = false;
+    };
+
     const kindColors = new Map(doc.legend.map((l) => [l.kind, l.color]));
     // isHidden is a sigma built-in node state (we toggle it via setNodeState);
     // only isActive (node) and hasSelection (graph) are custom here. Generic
@@ -416,6 +492,10 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
 
     sigma.on('clickNode', ({ node }) => select(node));
     sigma.on('clickStage', () => clearSelection());
+    sigma.on('enterEdge', ({ edge, event }) => showTip(edge, event.x, event.y));
+    sigma.on('leaveEdge', () => {
+      tip.hidden = true;
+    });
 
     // Mount succeeded — drop the loading/error status line.
     stage.querySelector('[data-sf-status]')?.remove();
@@ -459,6 +539,12 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
       const text = el('span');
       text.textContent = `${node.label} (${node.kind})`;
       btn.append(dot, text);
+      if ((incidentLowConfidence.get(node.id) ?? 0) > 0) {
+        const badge = el('span', 'sf-confidence-chip');
+        badge.setAttribute('data-confidence', 'low');
+        badge.textContent = 'Unverified';
+        btn.append(badge);
+      }
       btn.addEventListener('click', () => select(node.id));
       li.append(btn);
       listItems.append(li);

@@ -15,7 +15,6 @@
   --sf-color-accent-soft: #e6effd;
   --sf-color-link: #0161ef;
   --sf-color-border: #dbdbdb;
-  --sf-color-highlight: #6d28d9;
 
   /* Type — Inter everywhere (name-first stack, system fallback) */
   --sf-font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

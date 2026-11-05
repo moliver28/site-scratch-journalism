@@ -1,6 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import ContentPage from '@moliver28/theme/layouts/ContentPage.astro';
+import DiscoveryHead from '../../components/DiscoveryHead.astro';
 
 export async function getStaticPaths() {
   const entities = await getCollection('entities');
@@ -21,4 +22,13 @@ const data = entry.data as Record<string, unknown>;
   kicker={String(data.type ?? 'entity')}
   block={data}
   skip={['name', 'type']}
-/>
+>
+  <Fragment slot="head-extra">
+    <DiscoveryHead
+      type="website"
+      title={String(data.name ?? entry.id)}
+      description={typeof data.summary === 'string' ? data.summary : undefined}
+      path={`entities/${entry.id}/`}
+    />
+  </Fragment>
+</ContentPage>

@@ -1,0 +1,30 @@
+---
+/**
+ * Low-confidence content badge (sitefactory#18): a `confidence`-shaped key
+ * valued 'low' renders as an "Unverified" chip instead of a bare string, so
+ * the journalism template's "labeled on render" promise is visible on the
+ * page, not only stored in the data. The raw value stays machine-readable
+ * via the data attribute.
+ */
+import type { FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+---
+
+<span class="sf-confidence-badge" data-field-confidence={String(field.value)}>Unverified</span>
+
+<style>
+  .sf-confidence-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    padding: 0.1em 0.5em;
+    background: var(--sf-color-accent-soft);
+    color: var(--sf-color-ink);
+  }
+</style>

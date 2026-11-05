@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '@moliver28/theme/layouts/BaseLayout.astro';
 import GraphIsland from '@moliver28/theme/graph/GraphIsland.astro';
+import DiscoveryHead from '../components/DiscoveryHead.astro';
 
 const edgeCount = (await getCollection('edges')).length;
 ---
@@ -11,6 +12,14 @@ const edgeCount = (await getCollection('edges')).length;
   description="Interactive relationship graph, compiled from the same YAML that drives the profile pages."
   siteName="Scratch Journalism Site"
 >
+  <Fragment slot="head-extra">
+    <DiscoveryHead
+      type="website"
+      title="Entity graph"
+      description="Interactive relationship graph, compiled from the same YAML that drives the profile pages."
+      path="graph/"
+    />
+  </Fragment>
   <h1>Entity graph</h1>
   <p>
     Nodes are entities; lines are typed, confidence-weighted edges

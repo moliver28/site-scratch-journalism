@@ -17,7 +17,6 @@
   --sf-color-accent-soft: #d9e8f6;
   --sf-color-link: #005ea2;
   --sf-color-border: #dfe1e2;
-  --sf-color-highlight: #00bde3;
 
   /* Type — Public Sans everywhere (name-first stack, system fallback) */
   --sf-font-display: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

@@ -1,5 +1,5 @@
 /**
- * Theme-preset resolution (plan P6.1) — public API typed in ./preset.d.ts.
+ * Theme-preset resolution (plan P6.1).
  *
  * Reads `site.config.yaml` (`theme_preset` field), Zod-validates it against
  * the presets actually present in `tokens/presets/` (each = `tokens.css` +
@@ -10,9 +10,13 @@
  * unknown preset fails the build before anything renders. Swapping presets
  * is one config field + rebuild (P6.5).
  *
- * Shipped as JS with a hand-written declaration: the theme's typecheck has
- * no @types/node (adding it would be a lockfile change; this module is the
- * only one touching Node builtins), and `astro check` skips .js files.
+ * Shipped as plain JS with no hand-written declaration (issue #26 F10: the
+ * .d.ts duplicated these signatures and could only drift): the theme's
+ * typecheck has no @types/node (adding it would be a lockfile change; this
+ * module is the only one touching Node builtins), and `astro check` skips
+ * .js files either way. match.d.ts is retained because its signatures are
+ * load-bearing — match.test.ts is type-checked inside this package, with
+ * no ambient shim (unlike this module's config-importer consumers).
  *
  * `yaml` and `astro/zod` are re-used from Astro's own dependency tree; the
  * theme never declares them directly (same pattern as `astro/zod` in the
@@ -63,15 +67,48 @@ function loadSiteConfig(siteRoot, presetsDir) {
   const file = path.join(siteRoot, 'site.config.yaml');
   if (!existsSync(file)) return { theme_preset: DEFAULT_PRESET };
   const raw = parseYaml(readFileSync(file, 'utf8'));
-  return siteConfigSchema(presetsDir).parse(raw ?? {});
+  try {
+    return siteConfigSchema(presetsDir).parse(raw ?? {});
+  } catch (error) {
+    // Unknown theme_preset: the raw Zod enum error lists the valid ids but
+    // never names the field, the file, or the catalog docs (issue #45).
+    // Re-throw with that context; `cause` keeps the full Zod report.
+    if (error instanceof z.ZodError && raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+      // 'unknown' = the id is simply not on disk (the typo case). 'invalid'
+      // can only happen when the presets dir changes between the schema's
+      // listPresets() call and this re-derivation (FS race): the id exists
+      // on disk but the enum still rejected it.
+      const known = listPresets(presetsDir);
+      const kind = known.includes(raw.theme_preset) ? 'invalid' : 'unknown';
+      const valid = known
+        .map((id) => `"${id}"`)
+        .join(', ');
+      throw new Error(
+        `site.config.yaml: ${kind} theme_preset "${String(raw.theme_preset)}" (valid: ${valid}) — see ops/catalog/README.md`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
 }
 
 /** Active preset for a site: config field, or the default when unset. */
 export function resolveThemePreset(options = {}) {
   const presetsDir = options.presetsDir ?? defaultPresetsDir();
   const siteRoot = options.siteRoot ?? process.cwd();
+  // Broken-install diagnostics (issue #26 F5): without these, an empty
+  // presets dir or a missing tokens.css surfaces later as Vite's
+  // "Failed to resolve import ... tokens/active.css", misattributed to
+  // BaseLayout instead of pointing at the presets dir.
+  if (listPresets(presetsDir).length === 0) {
+    throw new Error(`no presets found in ${presetsDir}`);
+  }
   const { theme_preset } = loadSiteConfig(siteRoot, presetsDir);
-  return { preset: theme_preset, cssPath: path.join(presetsDir, theme_preset, 'tokens.css') };
+  const cssPath = path.join(presetsDir, theme_preset, 'tokens.css');
+  if (!existsSync(cssPath)) {
+    throw new Error(`preset ${theme_preset}: tokens.css missing at ${cssPath}`);
+  }
+  return { preset: theme_preset, cssPath };
 }
 
 /** `vite` fragment for `astro.config.mjs`: alias the active preset's tokens over BaseLayout's default import. */

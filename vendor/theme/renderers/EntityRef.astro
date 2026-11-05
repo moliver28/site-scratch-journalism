@@ -1,10 +1,17 @@
 ---
 /**
  * Entity-reference fields (keys like *_ref, *_id, *_entity): render as a link
- * to the conventional entity profile route (/entities/<id>/). The value is
- * escaped by Astro; the href is constrained to the known route shape.
+ * to the entity's profile route. The value is escaped by Astro; the href is
+ * constrained to the known route shapes.
+ *
+ * Resolution is BUILD-TIME (sitefactory#19): a renderer component cannot read
+ * Astro content collections, so the glob below reads the two collections'
+ * FILE LISTS (keys only — files are never loaded) and entity-routes.ts picks
+ * the route: prefer `entities`, fall back to `custom-entities`; unknown ids
+ * keep the legacy /entities/<id>/ route.
  */
 import type { FieldView } from '../blocks/fields';
+import { resolveEntityHref } from './entity-routes';
 
 interface Props {
   field: FieldView;
@@ -13,7 +20,16 @@ const { field } = Astro.props;
 const id = typeof field.value === 'string' ? field.value.trim() : '';
 const valid = /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id);
 const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
-const href = valid ? `${base}entities/${id}/` : '';
+
+// Patterns MUST stay inline literals (vite's glob transform rejects
+// variables). `?raw` + never-invoked loaders keep matched files unloaded;
+// only the keys (file paths) are read, at build time.
+const entityFiles = import.meta.glob('/src/content/entities/**/*.{yaml,yml}', { query: '?raw', import: 'default' });
+const customEntityFiles = import.meta.glob('/src/content/custom-entities/**/*.{yaml,yml}', {
+  query: '?raw',
+  import: 'default',
+});
+const href = valid ? resolveEntityHref(id, base, Object.keys(entityFiles), Object.keys(customEntityFiles)) : '';
 ---
 
 {

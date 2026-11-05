@@ -15,12 +15,24 @@ template:
 
 theme:
   name: "@moliver28/theme"
-  version: 0.5.0
+  version: 0.6.0
   distribution: vendored
   path: vendor/theme
 
 graph:
   height: 32rem
+
+# Reader discovery (P9 UX F3): defaults are ALL ON — XML sitemap
+# (sitemap-index.xml), RSS feed (/rss.xml), Open Graph + Twitter cards,
+# JSON-LD. Set a key to false to opt that feature out at the next build;
+# unknown keys fail the build loudly. The weekly link monitor
+# (.github/workflows/monitor.yml) reads the deployed sitemap — opting out
+# of sitemap degrades it to checking the homepage only.
+discovery:
+  sitemap: true
+  rss: true
+  opengraph: true
+  jsonld: true
 
 # CI quality budgets: Lighthouse category minimums (enforced by
 # scripts/lighthouserc.cjs in the site's CI quality job). Raise with care —

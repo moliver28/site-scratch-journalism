@@ -17,7 +17,6 @@
   --sf-color-accent-soft: light-dark(#ebbcc0, #4f2829);
   --sf-color-link: light-dark(#c8102e, #f0596a);
   --sf-color-border: light-dark(#d8d4cc, #3a362f);
-  --sf-color-highlight: #b07a00;
 
   /* Type — serif display over Franklin-grotesque body (seed fallbacks).
      The seed's third face, Libre Caslon Display, is its nameplate font

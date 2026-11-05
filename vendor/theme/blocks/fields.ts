@@ -3,9 +3,9 @@
  * views so unknown fields render through the generic renderer map with zero
  * component code changes.
  *
- * Inference order matters: key-shaped hints (image/evidence/ref keys) win
- * over value-shaped hints (URL, ISO date); structural checks (objects,
- * arrays) come first overall.
+ * Inference order matters: key-shaped hints (image/evidence/confidence/ref
+ * keys) win over value-shaped hints (URL, ISO date); structural checks
+ * (objects, arrays) come first overall.
  */
 
 export type FieldType =
@@ -17,6 +17,7 @@ export type FieldType =
   | 'daterange'
   | 'entityref'
   | 'evidence'
+  | 'confidence'
   | 'string'
   | 'number'
   | 'boolean'
@@ -34,6 +35,7 @@ export const RENDERABLE_FIELD_TYPES: readonly FieldType[] = [
   'daterange',
   'entityref',
   'evidence',
+  'confidence',
   'string',
   'number',
   'boolean',
@@ -62,9 +64,13 @@ function looksLikeDateValue(value: unknown): boolean {
 
 const IMAGE_KEY = /(^|_)(image|photo|portrait|thumbnail|thumb|img|avatar|figure)(_|$)/i;
 const EVIDENCE_KEY = /(^|_)(evidence|exhibit|citation|cite|source_file|attachment)(_|$)/i;
+/** `confidence` keys valued 'low' render as an "Unverified" badge (sitefactory#18); 'high'/'medium' stay plain strings. */
+const CONFIDENCE_KEY = /(^|_)confidence(_|$)/i;
 const ENTITY_REF_KEY = /(^|_)(ref|entity|person|org|place|event|document)$|(_ref|_entity)$|^ref$/i;
 const DATE_KEY = /(^|_)(date|time|day)(_|$)|(_at|_on|_date|_time)$|(^|_)held_/i;
-const RICHTEXT_KEY = /(_md|_html|_markdown)$|^(body|content|text|notes|description|summary|abstract)$/i;
+// `profile` is included (issue #14): a person/organisation bio is
+// multi-paragraph prose, not a scalar string.
+const RICHTEXT_KEY = /(_md|_html|_markdown)$|^(body|content|text|notes|description|summary|abstract|profile)$/i;
 
 /** Keys never rendered as fields (they are page structure, not content). */
 export const DEFAULT_SKIP_KEYS: readonly string[] = ['id', 'slug', 'collection'];
@@ -118,6 +124,7 @@ export function inferFieldType(key: string, value: unknown): FieldType {
   if (typeof value === 'string') {
     if (IMAGE_KEY.test(key)) return 'image';
     if (EVIDENCE_KEY.test(key)) return 'evidence';
+    if (CONFIDENCE_KEY.test(key) && value.trim().toLowerCase() === 'low') return 'confidence';
     if (looksLikeDate(value)) return 'date';
     if (DATE_KEY.test(key) && value.trim() !== '') return 'date';
     if (/^https?:\/\//i.test(value.trim())) return 'url';

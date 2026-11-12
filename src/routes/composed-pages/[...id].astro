@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@moliver28/theme/layouts/BaseLayout.astro';
+import BlockList from '@moliver28/theme/blocks/BlockList.astro';
+import { loadComposedPages } from '@moliver28/theme/config/pages';
+import { BLOCK_KINDS } from '@moliver28/theme/blocks/registry';
+
+/**
+ * Config-composed pages (P6.7), injected at /pages/[...id] ONLY when
+ * site.config.yaml declares a non-empty `pages:` map (see astro.config.mjs
+ * — injecting keeps this module out of the build graph otherwise, so
+ * unused-feature renders stay byte-identical). Markdown pages are the
+ * higher-priority route at this pattern and always win a shared slug, so
+ * this path set EXCLUDES markdown ids — no route conflicts, no warnings.
+ */
+export async function getStaticPaths() {
+  const markdownIds = new Set((await getCollection('pages')).map((entry) => entry.id));
+  return Object.entries(loadComposedPages(process.cwd(), { blockKinds: BLOCK_KINDS }))
+    .filter(([slug]) => !markdownIds.has(slug))
+    .map(([slug, composedPage]) => ({
+      params: { id: slug },
+      props: { composedPage },
+    }));
+}
+
+/** One composed-page spec (post-validation shape from config/pages.js). */
+interface Props {
+  composedPage: {
+    title: string;
+    description?: string;
+    blocks: Array<{ block: string; props?: Record<string, unknown> }>;
+  };
+}
+const { composedPage } = Astro.props;
+---
+
+<BaseLayout title={composedPage.title} description={composedPage.description} siteName="Scratch Journalism Site">
+  <article class="sf-page">
+    <h1>{composedPage.title}</h1>
+    <BlockList entries={composedPage.blocks} />
+  </article>
+</BaseLayout>
+
+<style>
+  .sf-page {
+    background: var(--sf-color-surface);
+    border: var(--sf-line);
+    border-radius: var(--sf-radius);
+    padding: var(--sf-space-4);
+    margin-top: var(--sf-space-4);
+  }
+</style>

@@ -5,8 +5,8 @@ author: sitefactory
 description: Deploy smoke for the sitefactory journalism template.
 graph_height: 32rem
 owner: moliver28
+pack: journalism
 repo: site-scratch-journalism
 site_name: Scratch Journalism Site
 theme_preset: minimal-academic
-theme_version: 0.6.0
-vertical: journalism
+theme_version: 0.7.0

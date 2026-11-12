@@ -15,12 +15,27 @@ template:
 
 theme:
   name: "@moliver28/theme"
-  version: 0.6.0
+  version: 0.7.0
   distribution: vendored
   path: vendor/theme
 
 graph:
   height: 32rem
+
+# Config-composed pages (P6.7, OPTIONAL): declare a page as an ordered list
+# of theme blocks — no markdown file, no template edit. Commented out by
+# default (an absent field changes nothing); uncomment and adapt to add:
+# pages:
+#   about:
+#     title: About this investigation
+#     description: Who we are and how to reach the newsroom
+#     blocks:
+#       - block: fields        # a block-registry id; unknown ids fail the build
+#         props:               # rendered as a definition list
+#           mission: Independent tracking of the Riverside clearance.
+#           contact: tips@example.org
+# Runbook (shape, slug rules, config-vs-markdown precedence):
+# docs/TEMPLATE-CATALOG.md in the sitefactory repo.
 
 # Reader discovery (P9 UX F3): defaults are ALL ON — XML sitemap
 # (sitemap-index.xml), RSS feed (/rss.xml), Open Graph + Twitter cards,

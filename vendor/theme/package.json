@@ -1,6 +1,6 @@
 {
   "name": "@moliver28/theme",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Auto-adapting Astro theme: design tokens, generic field renderers, block registry, entity graph island. Unknown data fields render with zero component code changes.",
   "type": "module",
   "license": "MIT",
@@ -27,6 +27,7 @@
     "./tokens/active.css": "./tokens/presets/journalism-default/tokens.css",
     "./config/preset": "./config/preset.js",
     "./config/match": "./config/match.js",
+    "./config/pages": "./config/pages.js",
     "./graph/compiler": "./graph/compiler.ts",
     "./blocks/fields": "./blocks/fields.ts",
     "./blocks/registry": "./blocks/registry.ts",

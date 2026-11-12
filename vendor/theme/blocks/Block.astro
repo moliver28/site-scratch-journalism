@@ -10,9 +10,16 @@ import { resolveBlockComponent } from './components';
 interface Props {
   block: Record<string, unknown>;
   skip?: readonly string[];
+  /**
+   * Explicit registry kind (P6.7 composed pages declare the kind OUT of
+   * band, as the `block:` id in site.config.yaml, so the data itself stays
+   * clean). Absent on every data-driven render — the kind is derived from
+   * the block data exactly as before, byte-identical.
+   */
+  kind?: string;
 }
-const { block, skip } = Astro.props;
-const kind = normalizeBlockKind(block.kind ?? block.type);
+const { block, skip, kind: explicitKind } = Astro.props;
+const kind = normalizeBlockKind(explicitKind ?? block.kind ?? block.type);
 const BlockComponent = resolveBlockComponent(kind);
 ---
 

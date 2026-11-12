@@ -1,0 +1,42 @@
+---
+/**
+ * Composed-page block list (P6.7): renders an ORDERED array of config block
+ * entries — `{ block: <registry id>, props?: <data> }` — through the same
+ * registry dispatcher data-driven blocks use (Block.astro, with the kind
+ * passed explicitly so the props data stays clean). Declaration order is
+ * render order; nothing sorts, dedupes, or reorders.
+ *
+ * Feed: the optional `pages:` map in site.config.yaml (slug → page spec),
+ * validated against the block registry by config/pages.js BEFORE this
+ * component runs — unknown block ids fail the build there, so by the time
+ * an entry reaches this list its id is renderable. A component rendered
+ * without validation (direct theme consumer) degrades gracefully like any
+ * unknown data kind: Block.astro falls back to the generic fields block.
+ */
+import Block from './Block.astro';
+
+/** One entry of a composed page's `blocks:` list (post-validation shape). */
+export interface ComposedBlockEntry {
+  /** Registry id (BLOCK_KINDS member) — dispatched by Block.astro. */
+  block: string;
+  /** Data the block renders; empty object when the author omitted props. */
+  props?: Record<string, unknown>;
+}
+
+interface Props {
+  entries: readonly ComposedBlockEntry[];
+  /** Keys never rendered as fields (page structure, not content). */
+  skip?: readonly string[];
+}
+const { entries, skip } = Astro.props;
+---
+
+<div class="sf-block-list">
+  {
+    entries.map((entry) => (
+      <section class="sf-block-list-item" data-composed-block={entry.block}>
+        <Block block={entry.props ?? {}} kind={entry.block} skip={skip} />
+      </section>
+    ))
+  }
+</div>

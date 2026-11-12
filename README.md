@@ -1,7 +1,7 @@
 # Scratch Journalism Site
 
 Investigative reporting site built with [sitefactory](https://github.com/moliver28/sitefactory)
-(journalism template v0.1.0, @moliver28/theme 0.6.0).
+(journalism template v0.1.0, @moliver28/theme 0.7.0).
 
 - Live: https://moliver28.github.io/site-scratch-journalism/
 - PR previews: `https://moliver28.github.io/site-scratch-journalism/pr-preview/pr-<n>/`
@@ -22,6 +22,21 @@ Investigative reporting site built with [sitefactory](https://github.com/moliver
 | `site.config.yaml` | Machine-readable site identity for factory tooling |
 | `.github/workflows/monitor.yml` | Weekly link check of the deployed site (opens an issue on failure) |
 | `AGENTS.md` | Editorial + agent rules (read before writing content) |
+
+## Schema pack
+
+This site's content model is emitted from the journalism schema-pack (the
+`pack` answer recorded in `.copier-answers.yml`). Site owners never touch
+packs. Template-side authors: a new vertical is a new pack in the template's
+`packs/` directory — **never a template fork** (see the template's
+`packs/README.md` for the pack contract, the graph axis (#83), and the
+author checklist portfolio followed as vertical #2). Boundary to know: the
+factory's render CI proves EMISSION shape for every pack and BUILD + gates
+for the shipped ones (journalism via render-smoke, portfolio via the
+`portfolio-smoke` leg); a reshaped or new pack whose emitted collections
+don't satisfy the pages' `getCollection` calls still surfaces at
+`astro check`/build in the site repo, so run the site's own gates before
+shipping a reshaped pack.
 
 ## Commands
 

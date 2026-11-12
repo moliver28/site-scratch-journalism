@@ -3,6 +3,13 @@
 Layering: global `~/.zcode/AGENTS.md` → sitefactory factory `AGENTS.md` → this file
 → Zod schemas in `src/content.config.ts` (machine-enforced).
 
+## Schema pack
+
+The content model (collections, schemas, admin config) is emitted from the
+site's schema-pack, selected at scaffold time. It is not hand-edited:
+schema changes go through the template — and a new vertical is a new pack
+there, never a template fork (template `packs/README.md`).
+
 ## Journalism rules (binding for humans and agents)
 
 1. **Privacy first.** Never publish private individuals' personal data (home

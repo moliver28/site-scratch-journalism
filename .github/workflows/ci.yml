@@ -31,9 +31,22 @@ jobs:
     if: github.event_name == 'push' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Node 24-runtime action majors (issue sitefactory#16-3): the v4 pins
+      # logged Node 20 action-runner deprecation notices on every run.
+      # Behavioral deltas audited against the release notes: downloads here
+      # are all by name (download-artifact v5's by-ID path fix doesn't
+      # apply); download-artifact is one major ahead of upload because v8
+      # ships two deltas — hash mismatches now error by default
+      # (`digest-mismatch` override), and v8 checks the Content-Type header
+      # before unzipping, skipping decompression for non-zipped downloads
+      # (benign for `site-dist`); checkout v6+ persists creds to a separate
+      # file instead of the repo's `.git/config` (nothing here reads them
+      # from there); the `include-hidden-files` flags below are unchanged;
+      # node24 actions need runner >= 2.327.1 (GitHub-hosted runners are
+      # current).
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -52,7 +65,7 @@ jobs:
       # artifact — gates is the only build, so "green gates = exactly what
       # ships" (no second, potentially divergent build).
       - name: Upload build artifact for deploy/preview/quality
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: site-dist
           path: dist
@@ -75,9 +88,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -88,7 +101,7 @@ jobs:
         run: npm ci
 
       - name: Download gates build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: site-dist
           path: dist
@@ -140,7 +153,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
@@ -149,7 +162,7 @@ jobs:
 
       - name: Upload Playwright test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: test-results/
@@ -158,7 +171,7 @@ jobs:
 
       - name: Upload Lighthouse reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lhci
           path: .lighthouseci/
@@ -187,7 +200,7 @@ jobs:
       # against the gh-pages branch and needs only the publish dir.
       # Issue sitefactory#21: ship the build gates already validated.
       - name: Download gates build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: site-dist
           path: dist
@@ -214,7 +227,7 @@ jobs:
       group: gh-pages-writes
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         # Kept despite the artifact: pr-preview-action's usage docs state the
         # workflow checks out the repository before running the action, and
         # checkout costs seconds vs the minutes the dropped install+build
@@ -225,7 +238,7 @@ jobs:
       # which ships any workspace folder to the preview branch — a downloaded
       # artifact dir qualifies.
       - name: Download gates build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: site-dist
           path: dist
@@ -264,7 +277,7 @@ jobs:
     steps:
       # pr-preview-action's usage contract: check out the repository before
       # the action runs (it drives git against the workspace).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Remove pr-preview/pr-<n>/ from gh-pages
         uses: rossjrw/pr-preview-action@v1

@@ -23,6 +23,12 @@
   --sf-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sf-measure: 72ch;
 
+  /* Type scale ramp — h1, h2, site-home/graph-card h3, small text */
+  --sf-type-scale-xl: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+  --sf-type-scale-lg: 1.375rem;
+  --sf-type-scale-md: 1.125rem;
+  --sf-type-scale-sm: 0.875rem;
+
   /* Space & shape — bento rhythm (seed's 4.5rem tight-section max),
      distinctly rounded 18px cards */
   --sf-space-1: 0.25rem;
@@ -32,6 +38,19 @@
   --sf-space-5: 4.5rem;
   --sf-radius: 18px;
   --sf-line: 1px solid var(--sf-color-border);
+
+  /* Controls & figures (ADR #84) — defaults chain into the color, space,
+     and radius tokens above, so a preset's identity flows into buttons,
+     form controls, and figures without per-preset edits; override only
+     where the look genuinely demands it. */
+  --sf-button-bg: var(--sf-color-surface);
+  --sf-button-fg: var(--sf-color-ink);
+  --sf-button-padding: var(--sf-space-1) var(--sf-space-2);
+  --sf-button-radius: var(--sf-radius);
+  --sf-form-accent: auto;
+  --sf-form-focus: var(--sf-color-accent);
+  --sf-figure-frame: none;
+  --sf-figure-caption: var(--sf-color-muted);
 
   /* Graph */
   --sf-graph-h: 30rem;

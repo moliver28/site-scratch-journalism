@@ -1,7 +1,7 @@
 # Scratch Journalism Site
 
 Investigative reporting site built with [sitefactory](https://github.com/moliver28/sitefactory)
-(journalism template v0.1.0, @moliver28/theme 0.7.0).
+(journalism template v0.1.0, @moliver28/theme 0.8.0).
 
 - Live: https://moliver28.github.io/site-scratch-journalism/
 - PR previews: `https://moliver28.github.io/site-scratch-journalism/pr-preview/pr-<n>/`
@@ -14,6 +14,7 @@ Investigative reporting site built with [sitefactory](https://github.com/moliver
 | `src/content/edges/` | Typed, evidence-cited relations between entities |
 | `src/content/pages/` | Narrative pages (markdown) |
 | `src/content/custom-entities/` | Fast path for brand-new entity kinds |
+| `src/content.extensions.ts` | YOUR schema extensions — the one schema file you edit (survives every recopy) |
 | `src/components/DiscoveryHead.astro` | Reader-discovery head tags (OG/Twitter cards, JSON-LD) |
 | `src/rss/rss.xml.ts` | RSS feed endpoint (dated pages, newest first; routed only when `discovery.rss` is on) |
 | `static/evidence/` | Source documents, referenced by content |
@@ -37,6 +38,40 @@ for the shipped ones (journalism via render-smoke, portfolio via the
 don't satisfy the pages' `getCollection` calls still surfaces at
 `astro check`/build in the site repo, so run the site's own gates before
 shipping a reshaped pack.
+
+## Client-owned schema extensions (sitefactory ADR #85)
+
+`src/content.config.ts` is TEMPLATE-owned: `copier recopy -l -w` overwrites
+it on every template update, so never edit it — that is how site-local schema
+guards get silently reverted (#50). Site-local schema customizations live in
+**`src/content.extensions.ts`** — the one schema file you own. It is created
+with the site, imported and applied by the core config, and copier is
+structurally unable to rewrite it once it exists (`_skip_if_exists`), so your
+customizations survive every recopy and update.
+
+The file ships as an empty record; an unused seam changes nothing. Entries
+are keyed by collection name:
+
+```ts
+import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
+import { glob } from 'astro/loaders';
+
+export const extensions: Record<string, ReturnType<typeof defineCollection>> = {
+  // REPLACE a pack collection: re-assert it (copy the core definition from
+  // src/content.config.ts, then modify — e.g. a stricter pages schema).
+  // ADD a collection: use a new key.
+  documents: defineCollection({
+    loader: glob({ pattern: '**/*.yaml', base: './src/content/documents' }),
+    schema: z.object({ name: z.string() }).catchall(z.unknown()),
+  }),
+};
+```
+
+Boundaries: the Sveltia admin config (`static/admin/`) is pack-emitted — a
+client-added collection gets no admin UI until upstreamed; and vertical-wide
+models belong in the schema-pack (a template PR), not the seam. If a seam
+tweak proves universal, upstream it into the pack so every site inherits it.
 
 ## Commands
 
@@ -94,6 +129,10 @@ to that version and let CI rebuild. `copier recopy` never adopts changed
 copier recopy -l -w
 copier recopy -l -w -d theme_version=<new>
 ```
+
+The recopy rewrites everything the template owns EXCEPT your
+`src/content.extensions.ts` (see "Client-owned schema extensions" above):
+template-owned files update; your schema extensions stay put.
 
 The lockfile is a mechanical companion: when an update changes dependency
 lines in `package.json`, the matching `package-lock.json` diff is expected

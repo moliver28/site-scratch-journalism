@@ -75,14 +75,9 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
   }
 
   .sf-graph-toggle {
-    font: inherit;
-    font-size: 0.875rem;
-    padding: var(--sf-space-1) var(--sf-space-2);
-    border: var(--sf-line);
-    border-radius: var(--sf-radius);
-    background: var(--sf-color-surface);
-    color: var(--sf-color-ink);
-    cursor: pointer;
+    /* Control base (padding/border/radius/bg/fg/cursor) flows from the
+       BaseLayout button rule; only the toggle-specific size lives here. */
+    font-size: var(--sf-type-scale-sm);
   }
 
   .sf-graph-toggle[aria-expanded='true'] {
@@ -133,7 +128,7 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.875rem;
+    font-size: var(--sf-type-scale-sm);
     cursor: pointer;
   }
 
@@ -194,7 +189,7 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
 
   [data-sf-graph] .sf-graph-card h3 {
     margin: 0 1.5rem 0.25rem 0;
-    font-size: 1.125rem;
+    font-size: var(--sf-type-scale-md);
   }
 
   [data-sf-graph] .sf-graph-card dl {
@@ -213,7 +208,7 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
   [data-sf-graph] .sf-graph-card dd {
     margin: 0;
     margin-inline-start: 0;
-    font-size: 0.875rem;
+    font-size: var(--sf-type-scale-sm);
     overflow-wrap: anywhere;
   }
 
@@ -439,6 +434,13 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     };
 
     const kindColors = new Map(doc.legend.map((l) => [l.kind, l.color]));
+    // ADR #84 tokens-only rule, canvas included: the selection-dimmed edge
+    // color is the preset's --sf-color-border (read from the loaded token
+    // sheet). It was previously hard-coded to the journalism-default value,
+    // which painted a light-gray highlight on dark presets. No hex fallback:
+    // the token contract test guarantees every shipped preset declares it;
+    // 'transparent' merely degrades the dim if a site strips the token.
+    const dimmedEdgeColor = getComputedStyle(document.body).getPropertyValue('--sf-color-border').trim() || 'transparent';
     // isHidden is a sigma built-in node state (we toggle it via setNodeState);
     // only isActive (node) and hasSelection (graph) are custom here. Generic
     // slots: N, E, G, NS, ES, GS — ES stays empty (base edge states suffice).
@@ -466,7 +468,7 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
         ],
         edges: [
           { color: { attribute: 'color' }, size: { attribute: 'size' } },
-          { when: (_attrs, _state, graphState) => graphState.hasSelection, then: { color: '#d8dee3' } },
+          { when: (_attrs, _state, graphState) => graphState.hasSelection, then: { color: dimmedEdgeColor } },
         ],
       },
     });

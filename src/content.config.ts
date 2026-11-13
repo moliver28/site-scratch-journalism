@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
+import { extensions } from './content.extensions';
 
 /**
  * Content schemas. Known fields are typed; `.catchall(z.unknown())` lets any
@@ -94,4 +95,4 @@ const customEntities = defineCollection({
     .catchall(z.unknown()),
 });
 
-export const collections = { entities, edges, pages, customEntities };
+export const collections = { entities, edges, pages, customEntities, ...extensions };

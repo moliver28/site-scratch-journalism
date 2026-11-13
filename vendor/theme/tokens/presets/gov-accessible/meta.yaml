@@ -28,3 +28,27 @@ source:
     value present in the seed repo — verified against
     designsystem.digital.gov token/settings tables. Values only — no CSS,
     markup or code copied. Accent-soft is USWDS primary-lighter.
+# ADR #84 contract overrides: every token this preset sets to a value other
+# than the shared contract default, with the USWDS stock-3.x truth each one
+# carries (verified against the @uswds/uswds 3.14.0 compiled CSS, public
+# domain). Governed by packages/theme/test/tokens.test.ts — an override
+# line in tokens.css without an entry here (or vice versa) fails CI.
+contract_overrides:
+  - token: --sf-type-scale-xl
+    value: 2.44rem
+    why: USWDS usa-prose h1 (stock normal typescale)
+  - token: --sf-type-scale-lg
+    value: 1.95rem
+    why: USWDS usa-prose h2
+  - token: --sf-type-scale-md
+    value: 1.34rem
+    why: USWDS usa-prose h3
+  - token: --sf-button-padding
+    value: 0.75rem 1.25rem
+    why: USWDS usa-button padding
+  - token: --sf-button-radius
+    value: 0.25rem
+    why: USWDS usa-button border radius ($theme-button-border-radius default "md")
+  - token: --sf-form-accent
+    value: var(--sf-color-accent)
+    why: USWDS draws its check fill in the primary color (#005ea2 = this preset's accent); the native-control accent-color equivalent

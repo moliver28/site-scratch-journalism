@@ -24,6 +24,12 @@
   --sf-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sf-measure: 68ex;
 
+  /* Type scale ramp — h1, h2, site-home/graph-card h3, small text */
+  --sf-type-scale-xl: 2.44rem; /* USWDS usa-prose h1 (stock 3.x) */
+  --sf-type-scale-lg: 1.95rem; /* USWDS usa-prose h2 */
+  --sf-type-scale-md: 1.34rem; /* USWDS usa-prose h3 */
+  --sf-type-scale-sm: 0.875rem; /* = USWDS 2xs — no override needed */
+
   /* Space & shape — 8px-step government rhythm, near-square cards */
   --sf-space-1: 0.25rem;
   --sf-space-2: 0.5rem;
@@ -32,6 +38,18 @@
   --sf-space-5: 4rem;
   --sf-radius: 8px;
   --sf-line: 1px solid var(--sf-color-border);
+
+  /* Controls & figures (ADR #84). Button and form values are USWDS-truth
+     (stock USWDS 3.x: usa-button radius/padding, check fill = primary,
+     usa-prose heading scale); the rest chain into the tokens above. */
+  --sf-button-bg: var(--sf-color-surface);
+  --sf-button-fg: var(--sf-color-ink);
+  --sf-button-padding: 0.75rem 1.25rem; /* USWDS usa-button */
+  --sf-button-radius: 0.25rem; /* USWDS usa-button ($theme-button-border-radius: "md") */
+  --sf-form-accent: var(--sf-color-accent); /* USWDS check fill = primary */
+  --sf-form-focus: var(--sf-color-accent);
+  --sf-figure-frame: none;
+  --sf-figure-caption: var(--sf-color-muted);
 
   /* Graph */
   --sf-graph-h: 30rem;

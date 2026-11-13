@@ -53,8 +53,12 @@ there, never a template fork (template `packs/README.md`).
 
 ## Content schema (read before writing)
 
-`src/content.config.ts` is the schema source of truth. Read it — including
-every `.catchall` rule — before writing any entity, edge, or page:
+Schema ownership is split (sitefactory ADR #85): `src/content.config.ts` is
+the TEMPLATE-owned core — `copier recopy` overwrites it, so never edit it.
+`src/content.extensions.ts` is the CLIENT-owned seam — the one schema file
+this repo edits (it survives every recopy; the core imports and applies it).
+Read both — including every `.catchall` rule — before writing any entity,
+edge, or page:
 
 - Known fields are typed and Zod-validated: wrong types or missing required
   fields fail the build (`npm run build` runs validation first).
@@ -66,11 +70,14 @@ every `.catchall` rule — before writing any entity, edge, or page:
 - The `pages` schema is typed (`title`, `description`, `order`). Unlike the
   YAML collections it carries no catchall unless this repo's schema adds one
   (some migrated sites do, so legacy frontmatter survives validation instead
-  of being stripped). Trust the schema file in this repo over this summary.
+  of being stripped). Trust the schema files in this repo over this summary —
+  and trust the core; the extensions file is yours. A stub entry whose key
+  matches a pack collection replaces it; a new key adds a collection.
 
-Content-only PRs must never modify `src/content.config.ts`, `src/pages/**`,
-`vendor/theme/**`, `.github/**`, or `package.json` — schema, routes, theme,
-and CI change only through code PRs, which always require human review.
+Content-only PRs must never modify `src/content.config.ts`,
+`src/content.extensions.ts`, `src/pages/**`, `vendor/theme/**`, `.github/**`,
+or `package.json` — schema (core or seam), routes, theme, and CI change only
+through code PRs, which always require human review.
 
 ## Reader discovery (default ON; moliver28/sitefactory#72)
 
@@ -111,10 +118,10 @@ repos with 60 days of no activity — any push resets that clock.
   URL stubs under `static/` (meta-refresh redirects preserving legacy URLs),
   and `README.md`. Nothing else.
 - Never in a content-only PR: code, config (`site.config.yaml`,
-  `astro.config.mjs`, `static/admin/**`), schema (`src/content.config.ts`),
-  theme (`vendor/theme/**`), workflows (`.github/**`), `package.json`, or
-  lockfiles. A PR mixing content with code/config must be split into
-  separate PRs.
+  `astro.config.mjs`, `static/admin/**`), schema (`src/content.config.ts` or
+  the client-owned `src/content.extensions.ts`), theme (`vendor/theme/**`),
+  workflows (`.github/**`), `package.json`, or lockfiles. A PR mixing
+  content with code/config must be split into separate PRs.
 - Evidence files are immutable source documents: add them under
   `static/evidence/<case-slug>/` exactly as received (byte-identical copies
   — no reformatting, no re-encoding); research/audit notes go under

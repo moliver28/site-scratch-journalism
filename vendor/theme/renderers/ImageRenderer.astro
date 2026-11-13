@@ -37,3 +37,22 @@ const safeSrc = /^https?:\/\//i.test(src) || (src.startsWith('/') && !src.starts
     </figure>
   )
 }
+
+<style>
+  /* Figure tokens (ADR #84): the image renderer is the family's real
+     consumer. Every declaration here is either token-driven (frame,
+     caption ink, caption size via the type ramp) or the declared
+     layout-integrity pair (max-width/height — overflow containment, a
+     pixel no-op for images inside the text measure). UA margins and flow
+     are stock; no restyle beyond what the token table declares. */
+  .sf-image img {
+    max-width: 100%;
+    height: auto;
+    border: var(--sf-figure-frame);
+  }
+
+  .sf-image figcaption {
+    font-size: var(--sf-type-scale-sm);
+    color: var(--sf-figure-caption);
+  }
+</style>

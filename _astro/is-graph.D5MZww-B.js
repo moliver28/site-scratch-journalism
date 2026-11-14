@@ -1,0 +1,1 @@
+import{t as e}from"./GraphIsland.astro_astro_type_script_index_0_lang.BOrhTrzo.js";var t=e(((e,t)=>{t.exports=function(e){return typeof e==`object`&&!!e&&typeof e.addUndirectedEdgeWithKey==`function`&&typeof e.dropNode==`function`&&typeof e.multi==`boolean`}}));export{t};

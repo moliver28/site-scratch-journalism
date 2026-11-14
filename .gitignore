@@ -27,3 +27,6 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+.mimosa/
+.token-optimizer/
+.zcode/

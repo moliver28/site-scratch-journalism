@@ -1,0 +1,56 @@
+---
+/**
+ * Media block (#128): an image grid from config props. Each entry renders
+ * through the existing ImageRenderer, so lazy loading, alt fallbacks,
+ * safe-src gating, and the ADR #84 figure tokens apply verbatim — the
+ * block adds layout, never its own image markup or CSS.
+ * `variant: reel` (P14 B1b, Every Layout Reel:
+ * https://every-layout.dev/layouts/reel/): one scroll-snapping row; the
+ * scroll region is keyboard-focusable and named (tabindex="0" +
+ * aria-label — WCAG 2.1 SC 2.1.1, https://www.w3.org/TR/WCAG21/#keyboard).
+ *
+ * Props:
+ *   images  array of { url|src, alt?, caption? } dicts (the same shape an
+ *           entity image field takes; entries without an http(s)/rooted src
+ *           are skipped; no valid entries renders nothing)
+ *
+ * No scoped <style>: the block chain is statically imported on every page
+ * that renders any block, so a <style> here would join the shared CSS of
+ * sites that never declare this kind — inline token-driven attributes keep
+ * unused-feature builds byte-identical (#128 contract).
+ */
+import type { FieldView } from './fields';
+import { isImageObject } from './fields';
+import ImageRenderer from '../renderers/ImageRenderer.astro';
+
+export const supportedVariants = ['reel'] as const;
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block } = Astro.props;
+const reel = block.variant === 'reel';
+const entries = Array.isArray(block.images) ? block.images : [];
+const images = entries.filter(
+  (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null && !Array.isArray(entry) && isImageObject(entry),
+);
+const fieldOf = (image: Record<string, unknown>): FieldView => ({
+  key: 'images',
+  label: typeof image.alt === 'string' && image.alt.trim() !== '' ? image.alt.trim() : 'Media',
+  value: image,
+  type: 'image',
+});
+---
+
+{
+  images.length > 0 && (
+    <section class="sf-media" style="margin:var(--sf-space-4) 0">
+      <div class="sf-media-grid" data-media-count={images.length} data-block-variant={reel ? 'reel' : undefined} tabindex={reel ? 0 : undefined} aria-label={reel ? 'Media reel' : undefined} style={reel ? 'display:grid;grid-auto-flow:column;grid-auto-columns:minmax(14rem,1fr);gap:var(--sf-space-3);overflow-x:auto;scroll-snap-type:x mandatory' : 'display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:var(--sf-space-3)'}>
+        {images.map((image) => (reel ? <div style="scroll-snap-align:start"><ImageRenderer field={fieldOf(image)} /></div> : (
+          <ImageRenderer field={fieldOf(image)} />
+        )))}
+      </div>
+    </section>
+  )
+}

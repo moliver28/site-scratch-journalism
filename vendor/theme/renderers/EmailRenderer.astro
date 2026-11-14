@@ -1,0 +1,13 @@
+---
+/**
+ * Email fields (P14 A2): a `mailto:` link — the exact-key symmetry of the
+ * shipped tel policy (TelRenderer, #88). Skeleton: `a[href^="mailto:"] > text`.
+ * A slipped-past value degrades to plain text; no scoped style sheet (#88 bytes).
+ */
+import type { FieldView } from '../blocks/fields';
+
+const { field } = Astro.props as { field: FieldView };
+const raw = typeof field.value === 'string' ? field.value.trim() : '';
+---
+
+{raw.includes('@') ? <a href={`mailto:${raw}`}>{raw}</a> : <span>{String(field.value)}</span>}

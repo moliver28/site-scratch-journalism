@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-11-14T16:40:45.820Z",
+  "sessionId": "sess_1823bf37-30d7-4a85-b321-a048707d1539",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "F:\\Documents\\ZCode\\.zcode\\.zcode\\workspace\\9c87e746-e53a-4ad7-8757-26cd3b7e1b0b\\.zcode\\agent-tasks\\p14-drill-journalism-commit.txt",
+  "outcome": "clear",
+  "coverage": "complete",
+  "findingCount": 0,
+  "durationMs": 4,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

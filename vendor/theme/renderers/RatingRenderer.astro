@@ -1,0 +1,39 @@
+---
+/**
+ * Rating fields (#88): a 5-star glyph row plus the exact numeric value.
+ * The glyph span is aria-hidden decoration; the accessible name is the
+ * figure itself ("Rated 4.5 out of 5") on the role="img" wrapper, so
+ * screen readers hear the number, not the asterisks.
+ *
+ * Slipped-past guard: inference only routes finite numbers here, but a
+ * direct theme consumer can hand the component anything — a non-number or
+ * non-finite value renders as plain text (the TelRenderer slipped-past
+ * contract, isRenderableRating) instead of a star row with a
+ * "Rated NaN out of 5" accessible name.
+ *
+ * No scoped <style>: every theme component that statically joins the block
+ * chain contributes its CSS to every page that renders a block, so new
+ * field/block styling rides inline token-driven attributes — a site whose
+ * data never triggers this type builds byte-identically (#88 contract).
+ */
+import { RATING_MAX, isRenderableRating, type FieldView } from '../blocks/fields';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const value = isRenderableRating(field.value) ? field.value : null;
+const filled = value === null ? 0 : Math.min(RATING_MAX, Math.max(0, Math.round(value)));
+const glyphs = '★'.repeat(filled) + '☆'.repeat(RATING_MAX - filled);
+---
+
+{
+  value === null ? (
+    <span>{String(field.value)}</span>
+  ) : (
+    <span class="sf-rating" role="img" aria-label={`Rated ${value} out of ${RATING_MAX}`} data-rating-value={String(value)} data-rating-max={String(RATING_MAX)}>
+      <span aria-hidden="true" style="color:var(--sf-color-accent);letter-spacing:0.1em">{glyphs}</span>
+      <span style="color:var(--sf-color-muted);font-size:var(--sf-type-scale-sm);margin-inline-start:var(--sf-space-1)">{value}/{RATING_MAX}</span>
+    </span>
+  )
+}

@@ -1,0 +1,15 @@
+---
+/**
+ * Badge fields (P14 A2): Bootstrap Badge / Bulma Tag / DaisyUI Badge anatomy
+ * (https://bulma.io/documentation/components/, https://daisyui.com/components/):
+ * accent-soft pill, accent ink, presentational text, no ARIA (no APG chip
+ * pattern). Skeleton: `span.sf-badge` xN; a string is one chip, a string list
+ * a row (badgeChips); off-shape degrades to plain text. No scoped style sheet (#88 bytes).
+ */
+import { badgeChips, type FieldView } from '../blocks/fields';
+
+const { field } = Astro.props as { field: FieldView };
+const chips = badgeChips(field.value);
+---
+
+{chips === null ? <span>{String(field.value)}</span> : chips.map((chip) => <span class="sf-badge" style="display:inline-block;background:var(--sf-color-accent-soft);color:var(--sf-color-accent);border-radius:var(--sf-radius);padding:0.1em 0.6em;margin-inline-end:var(--sf-space-1);font-size:var(--sf-type-scale-sm)">{chip}</span>)}

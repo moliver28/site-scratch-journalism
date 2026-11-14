@@ -4,14 +4,28 @@
  * Block component always falls back to the generic fields block for unknown
  * kinds, so a typo or a future kind degrades to visible plain rendering.
  */
-import { BLOCK_KINDS } from './registry';
+import { BLOCK_KINDS, BLOCK_VARIANTS } from './registry';
 import FieldsBlock from './FieldsBlock.astro';
+import HeroBlock, { supportedVariants as heroVariants } from './HeroBlock.astro';
+import StatsBlock, { supportedVariants as statsVariants } from './StatsBlock.astro';
+import TimelineBlock, { supportedVariants as timelineVariants } from './TimelineBlock.astro';
+import QuoteBlock, { supportedVariants as quoteVariants } from './QuoteBlock.astro';
+import MediaBlock, { supportedVariants as mediaVariants } from './MediaBlock.astro';
+import FaqBlock from './FaqBlock.astro';
+import CardsBlock from './CardsBlock.astro';
 
 /** Minimal structural type of an Astro component for the registry. */
 export type BlockComponent = (props: Record<string, unknown>) => unknown;
 
 export const blockRegistry: Record<string, BlockComponent> = {
   fields: FieldsBlock as unknown as BlockComponent,
+  hero: HeroBlock as unknown as BlockComponent,
+  stats: StatsBlock as unknown as BlockComponent,
+  timeline: TimelineBlock as unknown as BlockComponent,
+  quote: QuoteBlock as unknown as BlockComponent,
+  media: MediaBlock as unknown as BlockComponent,
+  faq: FaqBlock as unknown as BlockComponent,
+  cards: CardsBlock as unknown as BlockComponent,
 };
 
 /**
@@ -31,6 +45,15 @@ const unlisted = Object.keys(blockRegistry).filter((kind) => !(BLOCK_KINDS as re
 if (unlisted.length > 0) {
   throw new Error(`block registry: component bindings missing from BLOCK_KINDS: ${unlisted.join(', ')}`);
 }
+
+/**
+ * Variant parity (P14 B1a): BLOCK_VARIANTS must equal what the components
+ * actually render — each block exports its supportedVariants from
+ * frontmatter (absent export = none), checked both ways at build time.
+ */
+const variantSurfaces: Record<string, readonly string[]> = { hero: heroVariants, stats: statsVariants, timeline: timelineVariants, quote: quoteVariants, media: mediaVariants };
+const variantDrift = BLOCK_KINDS.filter((kind) => (variantSurfaces[kind] ?? []).join('|') !== BLOCK_VARIANTS[kind].join('|'));
+if (variantDrift.length > 0) throw new Error(`block registry: BLOCK_VARIANTS <> component supportedVariants drift on: ${variantDrift.join(', ')}`);
 
 export function resolveBlockComponent(kind: string): BlockComponent {
   return blockRegistry[kind] ?? (FieldsBlock as unknown as BlockComponent);

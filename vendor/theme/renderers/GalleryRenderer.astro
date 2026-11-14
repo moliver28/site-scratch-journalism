@@ -1,0 +1,35 @@
+---
+/**
+ * Gallery fields (#88): arrays of image objects render as a responsive
+ * figure grid — each entry through the existing ImageRenderer, so lazy
+ * loading, alt fallbacks, safe-src gating, and the ADR #84 figure tokens
+ * apply verbatim (the .sf-image CSS is already in every page that renders
+ * any field; this adds markup, not CSS).
+ *
+ * No scoped <style>: every theme component that statically joins the block
+ * chain contributes its CSS to every page that renders a block, so new
+ * field/block styling rides inline token-driven attributes — a site whose
+ * data never triggers this type builds byte-identically (#88 contract).
+ */
+import type { FieldView } from '../blocks/fields';
+import { isImageObject } from '../blocks/fields';
+import ImageRenderer from './ImageRenderer.astro';
+
+interface Props {
+  field: FieldView;
+}
+const { field } = Astro.props;
+const images = Array.isArray(field.value)
+  ? field.value.filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null && !Array.isArray(entry) && isImageObject(entry))
+  : [];
+---
+
+{
+  images.length > 0 && (
+    <div class="sf-gallery" data-gallery-count={images.length} style="display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:var(--sf-space-3)">
+      {images.map((image) => (
+        <ImageRenderer field={{ key: field.key, label: field.label, value: image, type: 'image' }} />
+      ))}
+    </div>
+  )
+}

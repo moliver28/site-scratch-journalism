@@ -1,7 +1,7 @@
 # Scratch Journalism Site
 
 Investigative reporting site built with [sitefactory](https://github.com/moliver28/sitefactory)
-(journalism template v0.1.0, @moliver28/theme 0.8.0).
+(journalism template v0.1.0, @moliver28/theme 0.10.1).
 
 - Live: https://moliver28.github.io/site-scratch-journalism/
 - PR previews: `https://moliver28.github.io/site-scratch-journalism/pr-preview/pr-<n>/`
@@ -81,6 +81,8 @@ npm run dev        # local dev server
 npm run build      # validates content (Zod) and builds
 npm run typecheck  # astro check
 ```
+
+Requires npm >= 8.3: transitive dependency versions are pinned via npm `overrides` (sitefactory #125), which older npm silently ignores.
 
 External-link check: the optional `linkcheck:` block in `site.config.yaml` (`exclude_domains`, `accept`) is the client-editable, declarative, auditable flakiness policy for bot-blocked external domains; internal links are always strict.
 

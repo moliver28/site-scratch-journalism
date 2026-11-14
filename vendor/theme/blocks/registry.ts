@@ -26,9 +26,23 @@ export const FALLBACK_BLOCK_KIND = 'fields';
  * (the auto-adapt moat). Config is authored intent: there a typo must fail
  * the build loudly, not silently render a fallback.
  */
-export const BLOCK_KINDS = ['fields'] as const;
+export const BLOCK_KINDS = ['fields', 'hero', 'stats', 'timeline', 'quote', 'media', 'faq', 'cards'] as const;
 
 export type BlockKind = (typeof BLOCK_KINDS)[number];
+
+/**
+ * Per-kind variant surface (P14 B1a): layout variants a composed entry may
+ * declare as `variant:`; empty list = the kind rejects every variant.
+ * Exact-match ids — config/pages.js validates against the map the caller
+ * passes (#45 style); components.ts pins this map to the components'
+ * exported supportedVariants both ways at build time. Adding a variant =
+ * one entry here + markup + specimen + pin. Sources: hero centered = Bulma
+ * Hero + Every Layout Cover (https://bulma.io/documentation/components/hero/, https://every-layout.dev/layouts/cover/); hero split = Every Layout Sidebar (https://every-layout.dev/layouts/sidebar/); hero gradient-bg = Open Props gradient pack mapped through preset tokens (https://open-props.style/); hero image-bg = ImageRenderer safe-src gate + the composed-pages veil; stats grid = DaisyUI Stats (https://daisyui.com/components/stat/); timeline horizontal = DaisyUI Timeline (https://daisyui.com/components/timeline/); timeline steps = DaisyUI Steps, state-driven dot colors (https://daisyui.com/components/steps/); quote card = DaisyUI Card (https://daisyui.com/components/card/); quote band = shadcn Card (https://ui.shadcn.com/docs/components/card); media reel = Every Layout Reel (https://every-layout.dev/layouts/reel/).
+ */
+export const BLOCK_VARIANTS = {
+  fields: [], hero: ['centered', 'split', 'gradient-bg', 'image-bg'],
+  stats: ['grid'], timeline: ['horizontal', 'steps'], quote: ['card', 'band'], media: ['reel'], faq: [], cards: [],
+} as const satisfies Record<BlockKind, readonly string[]>;
 
 export function normalizeBlockKind(kind: unknown): string {
   if (typeof kind === 'string' && kind.trim() !== '') return kind.trim().toLowerCase();

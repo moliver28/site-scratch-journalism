@@ -187,7 +187,7 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     margin-bottom: 0.25rem;
   }
 
-  [data-sf-graph] .sf-graph-card h3 {
+  [data-sf-graph] .sf-graph-card h2 {
     margin: 0 1.5rem 0.25rem 0;
     font-size: var(--sf-type-scale-md);
   }
@@ -256,9 +256,6 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
 </style>
 
 <script>
-  import Graph from 'graphology';
-  import forceAtlas2 from 'graphology-layout-forceatlas2';
-  import Sigma from 'sigma';
   import { seedCircularPositions, applyLayoutScaledSizes } from './layout';
 
   interface GraphNode {
@@ -323,7 +320,8 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     close.setAttribute('aria-label', 'Close entity card');
     close.textContent = '×';
 
-    const heading = el('h3');
+    // P14 rider (momus P3): h2 — an h3 under the page's h1 skipped a level.
+    const heading = el('h2');
     heading.textContent = node.label;
 
     const chip = el('span', 'sf-kind-chip');
@@ -377,6 +375,15 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
       return;
     }
 
+    // P14 rider (momus P2): the ~112 KB sigma/graphology/FA2 chunk loads
+    // only now — after the island is intersecting AND the graph document
+    // proved non-empty. The wiring script ships alone in the main chunk.
+    const [{ default: Graph }, { default: forceAtlas2 }, { default: Sigma }] = await Promise.all([
+      import('graphology'),
+      import('graphology-layout-forceatlas2'),
+      import('sigma'),
+    ]);
+
     const graph = new Graph<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>>({
       multi: true,
       type: 'undirected',
@@ -428,9 +435,16 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
         badge.textContent = 'Unverified';
         tip.append(badge);
       }
+      // Position, then clamp (#94): the stage is overflow:hidden, so a raw
+      // cursor-anchored left/top clips at the right/bottom edges. Show the
+      // tip FIRST (display:none measures as 0), then clamp to the stage box
+      // before paint — cursor coordinates inside the stage keep their exact
+      // position; only tips that would overflow get pulled in.
       tip.style.left = `${x}px`;
       tip.style.top = `${y}px`;
       tip.hidden = false;
+      tip.style.left = `${Math.max(0, Math.min(x, stage.clientWidth - tip.offsetWidth))}px`;
+      tip.style.top = `${Math.max(0, Math.min(y, stage.clientHeight - tip.offsetHeight))}px`;
     };
 
     const kindColors = new Map(doc.legend.map((l) => [l.kind, l.color]));
@@ -558,7 +572,24 @@ const { src = '/graph.json', height = '30rem' } = Astro.props;
     });
   }
 
-  for (const root of document.querySelectorAll<HTMLElement>('[data-sf-graph]')) {
-    void mount(root);
+  // P14 rider (momus P2): mount only when the island approaches the
+  // viewport (200px margin: fetch + layout start just before it scrolls
+  // into view). Engines without IntersectionObserver mount immediately —
+  // the old eager behavior is the degradation, never a blank stage.
+  const roots = [...document.querySelectorAll<HTMLElement>('[data-sf-graph]')];
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          observer.unobserve(entry.target);
+          void mount(entry.target as HTMLElement);
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    for (const root of roots) observer.observe(root);
+  } else {
+    for (const root of roots) void mount(root);
   }
 </script>

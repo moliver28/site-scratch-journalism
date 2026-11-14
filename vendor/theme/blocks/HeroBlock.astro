@@ -1,0 +1,93 @@
+---
+/**
+ * Hero block (#128): kicker / headline / lede / call-to-action composed
+ * from config props. Renders nothing when there is no headline — an empty
+ * hero is a config typo, not a page section.
+ * Props: `kicker`, `headline` (required), `lede`, `cta_label` + `cta_url`
+ * (both required together), `cta` — a list of { label, url } (B14, DaisyUI
+ * Join: https://daisyui.com/components/join/) where any well-formed entry
+ * replaces the pair and half-specified entries drop — and `variant`,
+ * declared per-kind in BLOCK_VARIANTS (registry.ts) and validated by
+ * config/pages.js. `centered` = Bulma Hero + Every Layout Cover
+ * (https://bulma.io/documentation/components/hero/, https://every-layout.dev/layouts/cover/):
+ * content and CTA row centered. `split` = Every Layout Sidebar
+ * (https://every-layout.dev/layouts/sidebar/): two auto-fit tracks
+ * (kicker+headline | lede+CTA) stacking below the 20rem floor, no
+ * breakpoints. `gradient-bg` (P14 B1b) = the Open Props gradient pack's
+ * decided pattern (https://open-props.style/ — `--gradient-*`) mapped
+ * through PRESET tokens, never hard-coded hues: a color-mix of the accent
+ * over the page bg. `image-bg` (P14 B1b) = a safe-src gated background
+ * `image` URL (the ImageRenderer gate verbatim: http(s) or site-rooted
+ * only) behind the composed-pages veil — a color-mix of the bg at 85% —
+ * so text stays readable; an out-of-gate url degrades to the default
+ * section. An unknown variant degrades to the default markup (the loud
+ * unknown-variant error lives in config/pages.js); the active variant
+ * emits data-block-variant (the gallery specimen key). No scoped style
+ * tag: inline token-driven attributes only (#128 contract).
+ */
+export const supportedVariants = ['centered', 'split', 'gradient-bg', 'image-bg'] as const;
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block } = Astro.props;
+const text = (key: string): string => (typeof block[key] === 'string' ? (block[key] as string).trim() : '');
+const kicker = text('kicker');
+const headline = text('headline');
+const lede = text('lede');
+const ctaLabel = text('cta_label');
+const ctaUrl = text('cta_url');
+const hasCta = ctaLabel !== '' && /^https?:\/\//i.test(ctaUrl) ? ctaUrl : '';
+// CTA list (B14): well-formed { label, url } entries only — any valid entry replaces the pair.
+const ctaList = (Array.isArray(block.cta) ? (block.cta as unknown[]) : []).flatMap((raw) => {
+  const entry = (raw ?? {}) as Record<string, unknown>;
+  const label = typeof entry.label === 'string' ? entry.label.trim() : '';
+  const url = typeof entry.url === 'string' ? entry.url.trim() : '';
+  return label !== '' && /^https?:\/\//i.test(url) ? [{ label, url }] : [];
+});
+const variant = (supportedVariants as readonly string[]).includes(text('variant')) ? text('variant') : '';
+// image-bg (P14 B1b): the ImageRenderer safe-src gate verbatim (http(s)
+// external or site-rooted internal only; protocol-relative URLs are never
+// safe) — an out-of-gate url degrades to the default section.
+const bgImage = variant === 'image-bg' && typeof block.image === 'string' && (/^https?:\/\//i.test(block.image) || (block.image.startsWith('/') && !block.image.startsWith('//'))) ? (block.image as string).trim() : '';
+const KICKER_STYLE = 'color:var(--sf-color-accent);font-size:var(--sf-type-scale-sm);font-weight:600;margin:0 0 var(--sf-space-1)';
+const HEADLINE_STYLE = 'font-size:var(--sf-type-scale-xl);line-height:1.15;margin:0 0 var(--sf-space-2)';
+const LEDE_STYLE = 'font-size:var(--sf-type-scale-md);color:var(--sf-color-muted);margin:0 0 var(--sf-space-3)';
+const pairCtaStyle = 'display:inline-block;padding:var(--sf-button-padding);border:var(--sf-line);border-radius:var(--sf-button-radius);background:var(--sf-button-bg);color:var(--sf-button-fg);text-decoration:none';
+// DaisyUI Join: radius on the group's ends only (-1px overlap collapses shared edges).
+const joinCtaStyle = (i: number, n: number): string => `display:inline-block;padding:var(--sf-button-padding);border:var(--sf-line);border-radius:${n === 1 ? 'var(--sf-button-radius)' : i === 0 ? 'var(--sf-button-radius) 0 0 var(--sf-button-radius)' : i === n - 1 ? '0 var(--sf-button-radius) var(--sf-button-radius) 0' : '0'};background:var(--sf-button-bg);color:var(--sf-button-fg);text-decoration:none${i > 0 ? ';margin-left:-1px' : ''}`;
+const sectionStyle = variant === 'centered' ? 'margin:var(--sf-space-4) 0;text-align:center' : bgImage !== '' ? `margin:var(--sf-space-4) 0;padding:var(--sf-space-3);background:linear-gradient(color-mix(in srgb, var(--sf-color-bg) 85%, transparent), color-mix(in srgb, var(--sf-color-bg) 85%, transparent)),url("${bgImage}") center / cover no-repeat` : variant === 'gradient-bg' ? 'margin:var(--sf-space-4) 0;padding:var(--sf-space-3);background:linear-gradient(135deg, color-mix(in srgb, var(--sf-color-accent) 16%, var(--sf-color-bg)), var(--sf-color-bg))' : 'margin:var(--sf-space-4) 0';
+const ctaRowStyle = variant === 'centered' ? 'margin:0;display:flex;flex-wrap:wrap;justify-content:center' : ctaList.length > 0 ? 'margin:0;display:flex;flex-wrap:wrap' : 'margin:0';
+---
+
+{
+  headline !== '' &&
+    (variant === 'split' && (lede !== '' || ctaList.length > 0 || hasCta !== '') ? (
+      <section class="sf-hero" data-block-variant="split" style="margin:var(--sf-space-4) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 20rem),1fr));gap:var(--sf-space-3);align-items:start">
+        <div>
+          {kicker !== '' && <p class="sf-hero-kicker" style={KICKER_STYLE}>{kicker}</p>}
+          <h2 class="sf-hero-headline" style={HEADLINE_STYLE}>{headline}</h2>
+        </div>
+        <div>
+          {lede !== '' && <p class="sf-hero-lede" style={LEDE_STYLE}>{lede}</p>}
+          {ctaList.length > 0 ? (
+            <p class="sf-hero-cta-row" style={ctaRowStyle}>{ctaList.map((cta, i) => <a class="sf-hero-cta" href={cta.url} style={joinCtaStyle(i, ctaList.length)}>{cta.label}</a>)}</p>
+          ) : (
+            hasCta !== '' && <p class="sf-hero-cta-row" style={ctaRowStyle}><a class="sf-hero-cta" href={hasCta} style={pairCtaStyle}>{ctaLabel}</a></p>
+          )}
+        </div>
+      </section>
+    ) : (
+      <section class="sf-hero" data-block-variant={variant !== '' && variant !== 'split' ? variant : undefined} style={sectionStyle}>
+        {kicker !== '' && <p class="sf-hero-kicker" style={KICKER_STYLE}>{kicker}</p>}
+        <h2 class="sf-hero-headline" style={HEADLINE_STYLE}>{headline}</h2>
+        {lede !== '' && <p class="sf-hero-lede" style={LEDE_STYLE}>{lede}</p>}
+        {ctaList.length > 0 ? (
+          <p class="sf-hero-cta-row" style={ctaRowStyle}>{ctaList.map((cta, i) => <a class="sf-hero-cta" href={cta.url} style={joinCtaStyle(i, ctaList.length)}>{cta.label}</a>)}</p>
+        ) : (
+          hasCta !== '' && <p class="sf-hero-cta-row" style={ctaRowStyle}><a class="sf-hero-cta" href={hasCta} style={pairCtaStyle}>{ctaLabel}</a></p>
+        )}
+      </section>
+    ))
+}

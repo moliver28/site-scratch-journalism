@@ -1,16 +1,25 @@
 ---
 /**
  * Generic scalar fallback: strings, numbers, booleans, dates.
- * Dates render as <time datetime> so machines read what humans see.
+ * Dates render as <time datetime> so machines read what humans see — but
+ * only genuinely ISO-shaped values (P14 rider, momus P2: a date-ish key
+ * hint used to type any non-empty string as a date, emitting invalid
+ * `<time datetime="UTC">`). Non-ISO strings fall back to <span>; the
+ * shape predicate is the detector's own ISO_DATE.
  */
-import type { FieldView } from '../blocks/fields';
+import { ISO_DATE, type FieldView } from '../blocks/fields';
 
 interface Props {
   field: FieldView;
 }
 const { field } = Astro.props;
 const { value, type } = field;
-const dateValue = value instanceof Date ? value.toISOString().slice(0, 10) : typeof value === 'string' ? value : '';
+const dateValue =
+  value instanceof Date
+    ? value.toISOString().slice(0, 10)
+    : typeof value === 'string' && ISO_DATE.test(value.trim())
+      ? value
+      : '';
 ---
 
 {

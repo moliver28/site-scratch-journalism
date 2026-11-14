@@ -1,0 +1,78 @@
+---
+/**
+ * Cards block (P14 A1): a grid of titled cards — figure / title / text /
+ * optional CTA. Source kit: Bulma Card + DaisyUI Card anatomy
+ * (https://bulma.io/documentation/components/card/ and
+ * https://daisyui.com/components/card/ — figure/body/actions regions).
+ * No APG card pattern exists; real h3 headings inside articles keep the
+ * heading order, and images ride the standard ImageRenderer (ADR #84
+ * figure tokens verbatim — the MediaBlock move). Semantic skeleton:
+ * section > ul > li > article > (figure > img)? + h3 + p + (a)?. The
+ * card consumes --sf-shadow-1 (first consumer; quote `card` is B1b's).
+ *
+ * Props:
+ *   cards  array of { title, text, image?, url?, cta_label? } (entries
+ *          without a title are skipped; no valid entries renders nothing)
+ *
+ * No scoped <style>: the block chain is statically imported on every page
+ * that renders any block, so a <style> here would join the shared CSS of
+ * sites that never declare this kind — inline token-driven attributes
+ * keep unused-feature builds byte-identical (#128 contract).
+ */
+import type { FieldView } from './fields';
+import ImageRenderer from '../renderers/ImageRenderer.astro';
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block } = Astro.props;
+const entries = Array.isArray(block.cards) ? block.cards : [];
+const cards = entries.filter(
+  (entry): entry is Record<string, unknown> =>
+    typeof entry === 'object' && entry !== null && !Array.isArray(entry) &&
+    typeof entry.title === 'string' && entry.title.trim() !== '',
+);
+const str = (card: Record<string, unknown>, key: string): string =>
+  typeof card[key] === 'string' ? (card[key] as string).trim() : '';
+const fieldOf = (card: Record<string, unknown>): FieldView => ({
+  key: 'cards',
+  label: (card.title as string).trim(),
+  value: card.image,
+  type: 'image',
+});
+const cta = (card: Record<string, unknown>): { label: string; url: string } | null => {
+  const url = str(card, 'url');
+  const label = str(card, 'cta_label');
+  return /^https?:\/\//i.test(url) && label !== '' ? { label, url } : null;
+};
+---
+
+{
+  cards.length > 0 && (
+    <section class="sf-cards" style="margin:var(--sf-space-4) 0">
+      <ul class="sf-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,16rem),1fr));gap:var(--sf-space-3);margin:0;padding:0;list-style:none">
+        {cards.map((card) => {
+          const text = str(card, 'text');
+          const link = cta(card);
+          return (
+            <li style="margin:0">
+              <article class="sf-card" style="display:flex;flex-direction:column;gap:var(--sf-space-2);height:100%;padding:var(--sf-space-3);border:var(--sf-line);border-radius:var(--sf-radius);background:var(--sf-color-surface);box-shadow:var(--sf-shadow-1)">
+                {card.image !== undefined && card.image !== null && <ImageRenderer field={fieldOf(card)} />}
+                <h3 style="margin:0;font-family:var(--sf-font-display);font-size:var(--sf-type-scale-md)">{(card.title as string).trim()}</h3>
+                {text !== '' && <p style="margin:0;color:var(--sf-color-muted);font-size:var(--sf-type-scale-sm)">{text}</p>}
+                {link !== null && (
+                  <p style="margin:auto 0 0">
+                    <a href={link.url} style="display:inline-block;padding:var(--sf-button-padding);border:var(--sf-line);border-radius:var(--sf-button-radius);background:var(--sf-button-bg);color:var(--sf-button-fg);text-decoration:none">
+                      {link.label}
+                    </a>
+                  </p>
+                )}
+              </article>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}

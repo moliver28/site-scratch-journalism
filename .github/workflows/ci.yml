@@ -29,7 +29,7 @@ jobs:
     # build, no gates. On push events `github.event.action` is unset, so
     # the != 'closed' comparison is true.
     if: github.event_name == 'push' || github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # Node 24-runtime action majors (issue sitefactory#16-3): the v4 pins
       # logged Node 20 action-runner deprecation notices on every run.
@@ -80,7 +80,7 @@ jobs:
     name: axe + lighthouse + lychee
     if: github.event_name == 'push' || github.event.action != 'closed'
     needs: gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # sitefactory#52: the Lighthouse sample is capped (10 URLs x 3 runs),
     # but the full job also runs axe scans, LHCI warmup and lychee; the old
     # 25-minute ceiling left no headroom for slow runners on large dists.
@@ -121,7 +121,7 @@ jobs:
         run: mkdir -p serve && cp -r dist "serve/${{ github.event.repository.name }}"
 
       - name: Lighthouse CI (budgets from site.config.yaml)
-        run: npx -y @lhci/cli@0.16.0 autorun --config=scripts/lighthouserc.cjs
+        run: npx -y @lhci/cli@0.16.1 autorun --config=scripts/lighthouserc.cjs
 
       # Flakiness policy (issue sitefactory#53): clients may opt bot-blocked
       # external domains out and override lychee's --accept status set via
@@ -187,7 +187,7 @@ jobs:
     name: Deploy to GitHub Pages (main only)
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [gates, quality]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # pushes the gh-pages branch
     # Serialize every gh-pages write (deploy + previews) across workflow runs;
@@ -218,7 +218,7 @@ jobs:
     # job (issue sitefactory#48) — the closed event must not rebuild.
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
     needs: [gates, quality]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # pushes preview commits to gh-pages
       pull-requests: write # comments the preview URL on the PR
@@ -265,7 +265,7 @@ jobs:
     # PAT, matching the preview job's constraint); pull-requests: write is
     # required by the action's sticky preview-URL comment.
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged != true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # removes the preview commit from gh-pages
       pull-requests: write # preview-URL comment by the action

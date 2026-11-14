@@ -3,7 +3,7 @@ import sitemap from '@astrojs/sitemap';
 import { resolveDiscovery } from './src/lib/discovery';
 import { applyThemePreset } from '@moliver28/theme/config/preset';
 import { loadComposedPages } from '@moliver28/theme/config/pages';
-import { BLOCK_KINDS } from '@moliver28/theme/blocks/registry';
+import { BLOCK_KINDS, BLOCK_VARIANTS } from '@moliver28/theme/blocks/registry';
 
 // GitHub Pages project site: served at /site-scratch-journalism/ — every internal URL must
 // respect the base path. The theme's graph island fetches `${import.meta.env.BASE_URL}graph.json`
@@ -23,7 +23,7 @@ const discovery = resolveDiscovery();
 // unknown block id or a bad slug fails the build before anything renders;
 // markdown pages keep priority at the shared /pages/ pattern (the injected
 // route excludes markdown ids — no route conflicts).
-const composedPages = loadComposedPages(process.cwd(), { blockKinds: BLOCK_KINDS });
+const composedPages = loadComposedPages(process.cwd(), { blockKinds: BLOCK_KINDS, blockVariants: BLOCK_VARIANTS });
 
 export default defineConfig({
   site: 'https://moliver28.github.io',

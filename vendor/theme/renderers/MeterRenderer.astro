@@ -1,0 +1,16 @@
+---
+/**
+ * Meter fields (P14 A2): a native <progress> bar (the APG Meter primitive,
+ * https://www.w3.org/WAI/ARIA/apg/patterns/meter/) + the exact value as
+ * visible text and accessible name (RatingRenderer pattern). Skeleton:
+ * `progress[value][max=100] + span`; accent-color rides --sf-form-accent.
+ * Out-of-range/slipped-past values degrade to plain text. No scoped style sheet (#88 bytes).
+ */
+import { METER_MAX, isRenderableMeter, type FieldView } from '../blocks/fields';
+
+const { field } = Astro.props as { field: FieldView };
+const value = isRenderableMeter(field.value) ? field.value : null;
+---
+
+{value === null ? <span>{String(field.value)}</span> : <progress max={METER_MAX} value={value} aria-label={`${field.label}: ${value} out of ${METER_MAX}`} data-meter-value={String(value)} style="accent-color:var(--sf-form-accent)" />}
+{value !== null && <span style="color:var(--sf-color-muted);font-size:var(--sf-type-scale-sm)">{value}/{METER_MAX}</span>}

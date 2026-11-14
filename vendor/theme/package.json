@@ -1,6 +1,6 @@
 {
   "name": "@moliver28/theme",
-  "version": "0.8.0",
+  "version": "0.10.1",
   "description": "Auto-adapting Astro theme: design tokens, generic field renderers, block registry, entity graph island. Unknown data fields render with zero component code changes.",
   "type": "module",
   "license": "MIT",
@@ -38,7 +38,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "typecheck": "astro check"
+    "typecheck": "astro-check"
   },
   "dependencies": {
     "graphology": "^0.26.0",

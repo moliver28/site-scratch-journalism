@@ -1,0 +1,29 @@
+---
+/**
+ * Print hook (P14 B3): the `media="print"` sheet a composed home mounts
+ * when its pack declares `features.print` — hide the site chrome, keep
+ * sections unbroken, and print link hrefs after their anchors so the
+ * contact card + vCard URL survive on paper.
+ *
+ * Source kit (citation): HTML5 Boilerplate print media block
+ * https://github.com/h5bp/html5-boilerplate/blob/main/dist/css/style.css —
+ * skeleton `@media print { chrome { display: none } a[href]::after { content: attr-href } }`.
+ * `is:inline` is load-bearing: Astro's hoisting strips the `media`
+ * attribute on component styles, so the sheet must render verbatim where
+ * the head slot places it (plain CSS, safe unprocessed).
+ */
+---
+<style media="print" is:inline>
+  .sf-skip-link,
+  .sf-site-header,
+  .sf-site-footer,
+  nav[aria-label='Page sections'] {
+    display: none !important;
+  }
+  section { break-inside: avoid; }
+  a[href^='http']::after,
+  a[href^='mailto']::after,
+  a[href^='tel']::after {
+    content: ' (' attr(href) ')';
+  }
+</style>

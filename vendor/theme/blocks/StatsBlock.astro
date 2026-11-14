@@ -1,0 +1,57 @@
+---
+/**
+ * Stats block (#128): a metric-callout row from config props. Each entry
+ * renders as a display-font figure over a muted label — dl semantics (term
+ * = label, description = value) keep the pairing machine-readable.
+ * `variant: grid` (P14 B1b, DaisyUI Stats: https://daisyui.com/components/stat/):
+ * auto-fit boxes riding `--sf-line` instead of the open row — bare numbers
+ * stay bare text (no auto-bars).
+ * Props:
+ *   stats  array of { value, label } dicts (required; entries missing
+ *          either are skipped; no valid entries renders nothing)
+ *
+ * No scoped <style>: the block chain is statically imported on every page
+ * that renders any block, so a <style> here would join the shared CSS of
+ * sites that never declare this kind — inline token-driven attributes keep
+ * unused-feature builds byte-identical (#128 contract).
+ */
+export const supportedVariants = ['grid'] as const;
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block } = Astro.props;
+const variant = typeof block.variant === 'string' && (supportedVariants as readonly string[]).includes(block.variant) ? block.variant : '';
+const entries = Array.isArray(block.stats) ? block.stats : [];
+const stats = entries
+  .filter(
+    (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null && !Array.isArray(entry),
+  )
+  .map((entry) => ({
+    value: typeof entry.value === 'string' || typeof entry.value === 'number' ? String(entry.value) : '',
+    label: typeof entry.label === 'string' ? entry.label.trim() : '',
+  }))
+  .filter((entry) => entry.value !== '' && entry.label !== '');
+const listStyle = variant === 'grid' ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 9rem),1fr));gap:var(--sf-space-2);margin:0' : 'display:flex;flex-wrap:wrap;gap:var(--sf-space-3) var(--sf-space-5);margin:0';
+const boxStyle = variant === 'grid' ? 'display:flex;flex-direction:column-reverse;border:var(--sf-line);border-radius:var(--sf-radius);padding:var(--sf-space-2) var(--sf-space-3)' : 'display:flex;flex-direction:column-reverse;min-width:6rem';
+---
+
+{
+  stats.length > 0 && (
+    <section class="sf-stats" data-block-variant={variant === '' ? undefined : variant} style="margin:var(--sf-space-4) 0">
+      <dl class="sf-stats-list" style={listStyle}>
+        {stats.map((stat) => (
+          <div class="sf-stat" style={boxStyle}>
+            <dt class="sf-stat-label" style="order:2;color:var(--sf-color-muted);font-size:var(--sf-type-scale-sm)">
+              {stat.label}
+            </dt>
+            <dd class="sf-stat-value" style="order:1;margin:0;font-family:var(--sf-font-display);font-size:var(--sf-type-scale-lg);font-weight:700">
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}

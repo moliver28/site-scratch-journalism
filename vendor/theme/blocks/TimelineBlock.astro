@@ -1,0 +1,76 @@
+---
+/**
+ * Timeline block (#128): dated events as an ordered list against an accent
+ * rule — case chronologies, career history. <ol> semantics carry the
+ * ordering; <time datetime> carries the machine-readable date when the
+ * value is ISO-ish (unquoted YAML timestamps arrive as Date objects).
+ * `variant: horizontal` (P14 B1b, DaisyUI Timeline:
+ * https://daisyui.com/components/timeline/): the same events as a
+ * column-flow grid against a top accent rule, scrolling horizontally.
+ * `variant: steps` (P14 B1b, DaisyUI Steps:
+ * https://daisyui.com/components/steps/): per-event `state:
+ * done|current|todo` recolors the (always aria-hidden) dot — done/current
+ * accent, todo muted, current rings — the <ol> semantics stay untouched.
+ *
+ * Props:
+ *   events  array of { date?, title, description?, state? } dicts
+ *           (required; entries need a title; no valid entries renders
+ *           nothing; state is the steps-variant dot color only)
+ *
+ * No scoped <style>: the block chain is statically imported on every page
+ * that renders any block, so a <style> here would join the shared CSS of
+ * sites that never declare this kind — inline token-driven attributes keep
+ * unused-feature builds byte-identical (#128 contract).
+ */
+export const supportedVariants = ['horizontal', 'steps'] as const;
+
+interface Props {
+  block: Record<string, unknown>;
+  skip?: readonly string[];
+}
+const { block } = Astro.props;
+const variant = typeof block.variant === 'string' && (supportedVariants as readonly string[]).includes(block.variant) ? block.variant : '';
+const horizontal = variant === 'horizontal';
+const steps = variant === 'steps';
+const entries = Array.isArray(block.events) ? block.events : [];
+const ISO = /^\d{4}-\d{2}(-\d{2})?([T ]\d{2}:\d{2}(:\d{2})?Z?)?$/;
+const events = entries
+  .filter(
+    (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null && !Array.isArray(entry),
+  )
+  .map((entry) => {
+    const rawDate = entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : typeof entry.date === 'string' ? entry.date.trim() : '';
+    return {
+      date: rawDate,
+      datetime: ISO.test(rawDate) ? rawDate.slice(0, 10) : '',
+      title: typeof entry.title === 'string' ? entry.title.trim() : '',
+      description: typeof entry.description === 'string' ? entry.description.trim() : '',
+      state: entry.state === 'done' || entry.state === 'current' || entry.state === 'todo' ? entry.state : 'todo',
+    };
+  })
+  .filter((event) => event.title !== '');
+const olStyle = horizontal ? 'list-style:none;margin:var(--sf-space-4) 0;padding:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(11rem,1fr);gap:var(--sf-space-3);overflow-x:auto;border-block-start:var(--sf-line)' : 'list-style:none;margin:var(--sf-space-4) 0;padding:0;border-inline-start:var(--sf-line)';
+const liStyle = horizontal ? 'position:relative;padding:var(--sf-space-2) var(--sf-space-2) 0 0' : 'position:relative;padding:0 0 var(--sf-space-3) var(--sf-space-3)';
+const dotStyle = (state: string): string => `position:absolute;inset-inline-start:${horizontal ? '0;top:-0.4rem' : '-0.4rem;top:0.3rem'};width:0.7rem;height:0.7rem;border-radius:999px;background:${steps && state === 'todo' ? 'var(--sf-color-muted)' : 'var(--sf-color-accent)'}${steps && state === 'current' ? ';box-shadow:0 0 0 0.25rem color-mix(in srgb, var(--sf-color-accent) 25%, transparent)' : ''}`;
+---
+
+{
+  events.length > 0 && (
+    <ol class="sf-timeline" data-block-variant={variant === '' ? undefined : variant} style={olStyle}>
+      {events.map((event) => (
+        <li class="sf-timeline-event" style={liStyle}>
+          <span aria-hidden="true" style={dotStyle(event.state)} />
+          {event.date !== '' && (
+            <time class="sf-timeline-date" datetime={event.datetime || undefined} style="color:var(--sf-color-muted);font-size:var(--sf-type-scale-sm)">
+              {event.date}
+            </time>
+          )}
+          <strong class="sf-timeline-title" style="display:block;font-family:var(--sf-font-display);font-size:var(--sf-type-scale-md)">
+            {event.title}
+          </strong>
+          {event.description !== '' && <p style="margin:var(--sf-space-1) 0 0">{event.description}</p>}
+        </li>
+      ))}
+    </ol>
+  )
+}

@@ -15,7 +15,7 @@ template:
 
 theme:
   name: "@moliver28/theme"
-  version: 0.8.0
+  version: 0.10.1
   distribution: vendored
   path: vendor/theme
 

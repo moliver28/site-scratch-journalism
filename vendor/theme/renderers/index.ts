@@ -14,6 +14,13 @@ import DateRange from './DateRange.astro';
 import EntityRef from './EntityRef.astro';
 import EvidenceCite from './EvidenceCite.astro';
 import ConfidenceBadge from './ConfidenceBadge.astro';
+import TelRenderer from './TelRenderer.astro';
+import EmailRenderer from './EmailRenderer.astro';
+import RatingRenderer from './RatingRenderer.astro';
+import MeterRenderer from './MeterRenderer.astro';
+import BadgeRenderer from './BadgeRenderer.astro';
+import HoursRenderer from './HoursRenderer.astro';
+import GalleryRenderer from './GalleryRenderer.astro';
 import ListRenderer from './ListRenderer.astro';
 import TableRenderer from './TableRenderer.astro';
 import ObjectFallback from './ObjectFallback.astro';
@@ -28,6 +35,13 @@ export const fieldRenderers = {
   entityref: EntityRef,
   evidence: EvidenceCite,
   confidence: ConfidenceBadge,
+  tel: TelRenderer,
+  email: EmailRenderer,
+  rating: RatingRenderer,
+  meter: MeterRenderer,
+  badge: BadgeRenderer,
+  hours: HoursRenderer,
+  gallery: GalleryRenderer,
   string: Scalar,
   number: Scalar,
   boolean: Scalar,

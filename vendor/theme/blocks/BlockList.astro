@@ -12,6 +12,13 @@
  * an entry reaches this list its id is renderable. A component rendered
  * without validation (direct theme consumer) degrades gracefully like any
  * unknown data kind: Block.astro falls back to the generic fields block.
+ *
+ * Anchor ids (P14 B2): an entry's optional `id:` emits on its section
+ * wrapper, so nav deep links (`/#about`) resolve against the section —
+ * plain HTML fragment navigation
+ * (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#linking_to_an_element_on_the_same_page).
+ * The shape rule and within-page uniqueness are validated by
+ * config/pages.js; entries without `id` emit no attribute, byte-identical.
  */
 import Block from './Block.astro';
 
@@ -21,6 +28,8 @@ export interface ComposedBlockEntry {
   block: string;
   /** Data the block renders; empty object when the author omitted props. */
   props?: Record<string, unknown>;
+  /** Anchor id for the section wrapper (P14 B2); unique within one page. */
+  id?: string;
 }
 
 interface Props {
@@ -34,7 +43,7 @@ const { entries, skip } = Astro.props;
 <div class="sf-block-list">
   {
     entries.map((entry) => (
-      <section class="sf-block-list-item" data-composed-block={entry.block}>
+      <section class="sf-block-list-item" id={entry.id} data-composed-block={entry.block}>
         <Block block={entry.props ?? {}} kind={entry.block} skip={skip} />
       </section>
     ))

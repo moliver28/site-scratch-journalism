@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  packages: read # @moliver28/theme installs from GitHub Packages (#152)
 
 concurrency:
   # Event-aware group (sitefactory#66, seen live twice): a merged PR's
@@ -53,6 +54,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          # @moliver28/theme installs from GitHub Packages; the package is
+          # linked to this repo's publish origin, so the workflow token
+          # reads it without any stored secret (INSTALL.md auth model).
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Typecheck (astro check)
         run: npm run typecheck
@@ -87,6 +93,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read
+      packages: read # npm ci here too (job blocks override workflow-level; #152)
     steps:
       - uses: actions/checkout@v7
 
@@ -99,6 +106,8 @@ jobs:
       # itself comes from the gates artifact (issue sitefactory#21).
       - name: Install dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Download gates build artifact
         uses: actions/download-artifact@v8

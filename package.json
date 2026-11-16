@@ -14,7 +14,7 @@
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
-    "@moliver28/theme": "file:./vendor/theme",
+    "@moliver28/theme": "^0.10.1",
     "astro": "^7.4.4"
   },
   "devDependencies": {
